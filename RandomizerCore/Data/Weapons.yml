@@ -1,0 +1,224 @@
+Main_Weapons:
+  - Umbrella_Normal_H
+  - Slosher_Washtub_00
+  - Shooter_MissionNormalLv2
+  - Shooter_TripleQuick_00
+  - Charger_Normal_02
+  # - Roller_Rvl0Lv0
+  # - Shooter_Rvl2Lv0
+  - Roller_BrushNormal_02
+  - Spinner_Standard_H
+  - Twins_Stepper_01
+  - Spinner_Standard_02
+  - Shooter_Long_00
+  # - Umbrella_Rvl1Lv1
+  # - Shooter_BlasterRvl0Lv1
+  - Shooter_Normal_00
+  - Shooter_First_01
+  - Shooter_BlasterShort_01
+  - Charger_MissionNormalLv1
+  - Roller_Normal_02
+  - Shooter_Precision_00
+  - Shooter_TripleMiddle_00
+  - Twins_Short_01
+  # - Slosher_Rvl1Lv1
+  - Umbrella_Normal_01
+  - Twins_Short_00
+  - Shooter_BlasterLightLong_00
+  - Slosher_Bathtub_01
+  - Slosher_Washtub_01
+  # - Slosher_Rvl0Lv1
+  - Shooter_Flash_00
+  - Roller_Compact_00
+  - Shooter_Short_02
+  - Shooter_BlasterMiddle_00
+  - Twins_Stepper_00
+  - Roller_Normal_00
+  # - Slosher_Rvl1Lv0
+  - Spinner_Standard_01
+  - Roller_Compact_01
+  - Roller_Normal_01
+  - Charger_Normal_H
+  - Spinner_Quick_01
+  # - Shooter_Rvl1Lv0
+  - Twins_Normal_01
+  - Shooter_Expert_01
+  - Shooter_QuickMiddle_00
+  - Charger_Light_02
+  # - Shooter_BlasterRvl1Lv0
+  - Twins_Gallon_00
+  - Umbrella_MissionNormalLv0
+  - Shooter_BlasterLong_00
+  - Spinner_Standard_00
+  - Umbrella_Compact_00
+  - Shooter_Flash_01
+  - Shooter_BlasterMissionMiddleLv0
+  - Charger_LongScope_01
+  - Twins_Dual_00
+  # - Shooter_amiibo_00
+  # - Roller_BrushRvl1Lv0
+  - Shooter_BlasterLight_01
+  # - Shooter_Rvl0Lv1
+  # - Twins_Rvl1Lv1
+  - Roller_MissionNormalLv1
+  - Shooter_BlasterLight_02
+  - Shooter_QuickMiddle_01
+  - Spinner_Serein_00
+  # - Umbrella_Rvl1Lv0
+  - Shooter_TripleQuick_02
+  # - Charger_Enemy
+  - Umbrella_Wide_00
+  - Charger_Quick_01
+  - Shooter_MissionNormalLv0
+  - Charger_NormalScope_01
+  - Shooter_Short_01
+  - Shooter_Gravity_00
+  - Charger_NormalScope_00
+  - Umbrella_CoopAutoAssault
+  - Charger_Keeper_00
+  - Spinner_MissionStandardLv0
+  - Roller_MissionNormalLv0
+  - Roller_MissionBrushNormalLv0
+  - Slosher_Launcher_02
+  - Spinner_Downpour_01
+  # - Twins_Rvl1Lv0
+  - Shooter_Long_01
+  - Roller_BrushNormal_00
+  - Slosher_Strong_00
+  - Charger_CoopSpark
+  # - Roller_BrushRvl1Lv1
+  - Roller_Heavy_01
+  - Roller_BrushMini_01
+  # - Slosher_Rvl0Lv0
+  - Slosher_CoopVase
+  - Charger_LongScope_00
+  - Charger_Quick_00
+  # - Shooter_Rvl0Lv0
+  - Spinner_Hyper_00
+  - Shooter_Blaze_01
+  - Slosher_Launcher_00
+  - Charger_MissionNormalLv0
+  - Spinner_Hyper_01
+  - Spinner_Downpour_00
+  - Umbrella_Normal_00
+  - Shooter_Normal_H
+  - Shooter_MissionNormalLv1
+  - Shooter_BlasterLight_00
+  - Roller_Normal_H
+  - Slosher_Launcher_01
+  - Spinner_Quick_00
+  - Slosher_Strong_H
+  - Shooter_Expert_02
+  # - Shooter_Rvl2Lv1
+  - Charger_Quick_02
+  - Shooter_Expert_00
+  - Shooter_Blaze_02
+  - Shooter_BlasterLightShort_00
+  - Slosher_Diffusion_00
+  - Charger_Long_00
+  - Shooter_Heavy_01
+  - Roller_BrushNormal_01
+  - Slosher_Strong_02
+  - Shooter_Normal_Oct
+  - Shooter_Precision_01
+  - Twins_Short_02
+  - Twins_Normal_02
+  - Shooter_Gravity_01
+  - Slosher_Bathtub_00
+  - Charger_NormalScope_02
+  - Shooter_Normal_02
+  - Shooter_Short_00
+  # - Shooter_Enemy
+  - Umbrella_Compact_02
+  - Shooter_BlasterMissionMiddleLv1
+  - Shooter_BlasterLightShort_01
+  - Twins_MissionNormalLv1
+  - Roller_BrushNormal_H
+  # - Shooter_Rvl1Lv1
+  # - Shooter_amiibo_01
+  - Umbrella_Compact_01
+  - Charger_Keeper_01
+  - Shooter_Blaze_00
+  - Twins_Normal_00
+  - Twins_Normal_H
+  # - Roller_Rvl0Lv1
+  - Umbrella_MissionNormalLv1
+  - Shooter_QuickMiddle_02
+  - Shooter_BlasterShort_00
+  - Shooter_TripleMiddle_02
+  - Shooter_BlasterLong_02
+  - Charger_Light_01
+  - Umbrella_Wide_01
+  - Roller_Heavy_02
+  - Roller_MissionBrushNormalLv1
+  - Roller_Hunter_00
+  - Charger_Normal_01
+  # - Shooter_BlasterRvl0Lv0
+  - Shooter_BlasterMiddle_01
+  - Shooter_First_02
+  - Shooter_BlasterLightLong_01
+  # - Roller_Enemy
+  - Roller_Hunter_01
+  - Shooter_BlasterShort_02
+  - Slosher_Strong_01
+  - Twins_MissionNormalLv0
+  - Shooter_BlasterLong_01
+  - Shooter_BlasterCoopBurst
+  # - Spinner_Enemy
+  - Charger_Long_01
+  - Shooter_BlasterMiddle_H
+  - Spinner_Quick_02
+  - Roller_BrushMini_00
+  - Shooter_Gravity_02
+  - Slosher_MissionStrongLv1
+  - Twins_Gallon_01
+  # - Roller_Rvl1Lv0
+  - Umbrella_Wide_02
+  # - Shooter_BlasterRvl1Lv1
+  - Shooter_TripleMiddle_01
+  - Slosher_MissionStrongLv0
+  - Slosher_Diffusion_01
+  - Shooter_Heavy_00
+  - Twins_Dual_01
+  - Roller_BrushMini_02
+  - Roller_Heavy_00
+  - Twins_Gallon_02
+  - Shooter_TripleQuick_01
+  - Spinner_MissionStandardLv1
+  - Shooter_Normal_01
+  - Spinner_Serein_01
+  # - Roller_Rvl1Lv1
+  - Charger_Light_00
+  - Charger_Normal_00
+  - Shooter_First_00
+  - AquaBall
+  - Jetpack
+
+Sub_Weapons:
+  - Bomb_Suction
+  - PointSensor
+  - Bomb_Splash
+  - Bomb_Robo
+  - Bomb_Quick
+  - Bomb_Curling
+  - PoisonFog
+  - Bomb_Tako
+  - Bomb_Piyo
+
+Special_Weapons:
+  - SuperStamp # Ultra Stamp
+  - AquaBall # Baller
+  - LauncherSplash # Splat Bomb spam
+  - SuperBall # Booyah Bomb?
+  - SuperBubble # Bubble Blower?
+  - LauncherSuction # Suction Bomb spam
+  - LauncherQuick # Burst Bomb spam
+  - Jetpack # Inkjet
+  - SuperArmor # Armor
+  - LauncherCurling # Curling Bomb spam
+  - None
+  - SuperLanding # Splashdown
+  - LauncherRobo # Autobomb spam
+  - RainCloud # Rain
+  - WaterCutter # Stingray?
+  - SuperMissile # Tenta Missiles

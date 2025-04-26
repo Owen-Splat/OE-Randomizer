@@ -1,0 +1,50 @@
+Lines:
+  LineA:
+    OpenConditionStageList: # Stages that unlock another line???
+      - A08
+      - A03
+      - A01
+      - A00
+    StageList: # All Stages
+      - A01
+      - A02
+      - A03
+      - A04
+      - A05
+      - A06
+      - A07
+      - A08
+      - A00
+  Line1:
+
+StageIDs:
+  A00: 84
+  A01: 40
+  A02: 41
+  A03: 42
+  A04: 43
+  A05: 44
+  A06: 45
+  A07: 46
+  A08: 47
+  C01: 67
+  C02: 58
+  C03: 47
+  C04: 37
+  C05: 24
+  C06: 18
+  C07: 11
+  C08: 0
+  C09: 1
+  C10: 12
+  C11: 19
+  C12: 27
+  C13: 81
+  C14: 48
+  D06: 67
+  D11: 49
+  F04: 24
+  F07: 27
+  J04: 59
+  J05: 48
+  J06: 49
