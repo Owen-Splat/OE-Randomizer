@@ -10,7 +10,7 @@ import random, string, yaml
 class RandomizerWindow(QMainWindow):
     def __init__(self) -> None:
         super(RandomizerWindow, self).__init__()
-        self.ui = Ui_MainWindow()
+        self.ui = Ui_RandomizerWindow()
         self.ui.setupUi(self)
         self.loadSettings()
         self.show()
@@ -144,7 +144,7 @@ class RandomizerWindow(QMainWindow):
 
 
 
-class Ui_MainWindow(object):
+class Ui_RandomizerWindow(object):
     def setupUi(self, window: QMainWindow) -> None:
         window.setWindowTitle("Octo Expansion Randomizer")
         widget = QWidget()
@@ -191,7 +191,7 @@ class Ui_MainWindow(object):
         seed_line = QLineEdit(widget)
         seed_line.setPlaceholderText("Leave blank for random seed")
         button = QPushButton("Generate", widget)
-        button.clicked.connect(lambda: window.createSeed(seed_line))
+        button.clicked.connect(lambda: window.createSeed(True))
         hl = QHBoxLayout()
         hl.addWidget(label)
         hl.addWidget(seed_line)
@@ -264,27 +264,14 @@ class Ui_MainWindow(object):
 class WorkWindow(QMainWindow):
     def __init__(self, parent, settings: dict) -> None:
         super(WorkWindow, self).__init__(parent)
-        self.setupUi()
+        self.ui = Ui_WorkWindow()
+        self.ui.setupUi(self)
         self.setWindowTitle(settings['Seed'])
         self.settings = settings
         self.done = False
         self.error = False
         self.cancel = False
         self.startWorkThread()
-
-
-    def setupUi(self) -> None:
-        self.label = QLabel(text="Randomizing...", parent=self)
-        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.progress = QProgressBar(self)
-        self.progress.setMaximum(0)
-        vl = QVBoxLayout()
-        vl.addWidget(self.label)
-        vl.addWidget(self.progress)
-        self.setMinimumSize(448, 112)
-        widget = QWidget(self)
-        widget.setLayout(vl)
-        self.setCentralWidget(widget)
 
 
     def startWorkThread(self) -> None:
@@ -304,8 +291,8 @@ class WorkWindow(QMainWindow):
 
     def workDone(self):
         if self.error:
-            self.label.setText("Something went wrong! Please report this to GitHub!")
-            self.progress.setVisible(False)
+            self.ui.label.setText("Something went wrong! Please report this to GitHub!")
+            self.ui.progress.setVisible(False)
             self.done = True
             return
         
@@ -314,8 +301,8 @@ class WorkWindow(QMainWindow):
             self.close()
             return
         
-        self.label.setText("All done! Check the README for instructions on how to play!")
-        self.progress.setVisible(False)
+        self.ui.label.setText("All done! Check the README for instructions on how to play!")
+        self.ui.progress.setVisible(False)
         self.done = True
 
 
@@ -326,5 +313,21 @@ class WorkWindow(QMainWindow):
         else:
             event.ignore()
             self.cancel = True
-            self.label.setText('Canceling...')
+            self.ui.label.setText('Canceling...')
             self.work_thread.stop()
+
+
+
+class Ui_WorkWindow(object):
+    def setupUi(self, window: QMainWindow) -> None:
+        self.label = QLabel("Randomizing...", window)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.progress = QProgressBar(window)
+        self.progress.setMaximum(0)
+        vl = QVBoxLayout()
+        vl.addWidget(self.label)
+        vl.addWidget(self.progress)
+        window.setMinimumSize(448, 112)
+        widget = QWidget(window)
+        widget.setLayout(vl)
+        window.setCentralWidget(widget)
