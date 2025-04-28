@@ -15,7 +15,7 @@ class Metro_Process(QThread):
         QThread.__init__(self, parent)
         self.base_path = Path(settings['Base_Path'])
         self.dlc_path = Path(settings['DLC_Path'])
-        self.out_path = Path(settings['Output_Path']) / str(settings['Seed'])
+        self.root_out_path = Path(settings['Output_Path']) / str(settings['Seed'])
         self.seed = settings['Seed']
         del settings['Base_Path']
         del settings['DLC_Path']
@@ -24,19 +24,27 @@ class Metro_Process(QThread):
         self.settings = settings
 
         # remove old files first if they exist
-        if self.out_path.exists():
-            shutil.rmtree(self.out_path)
+        if self.root_out_path.exists():
+            shutil.rmtree(self.root_out_path)
 
         # now update the output path to match platform formatting
         if settings['Platform'] == "Console":
-            rg = settings['Region']
-            title_id = "" # different title ids for the different regions that I'm too lazy to look up right now :)
-            self.out_path = self.out_path / "atmosphere" / "contents" / title_id
-        self.out_path = self.out_path / "romfs"
+            match settings['Region']:
+                case 'EU':
+                    title_id = "0100f8f0000a2000"
+                case 'JP':
+                    title_id = "01003c700009c000"
+                case 'US':
+                    title_id = "01003bc0000a0000"
+            self.out_path = self.root_out_path / "atmosphere" / "contents" / title_id
+            self.out_path = self.out_path / "romfs"
+        else:
+            self.out_path = self.root_out_path / "romfs"
 
 
-    # automatically called when this thread is started
     def run(self) -> None:
+        """Automatically called when this thread is started"""
+
         try:
             self.makeMod()
         except Exception:
@@ -44,12 +52,23 @@ class Metro_Process(QThread):
             print(er)
             self.error.emit(er)
         finally: # regardless if there was an error or not, we want to tell the progress window that this thread has finished
+            if not self.thread_active and self.root_out_path.exists():
+                shutil.rmtree(self.root_out_path)
             self.is_done.emit()
+
+
+    def stop(self):
+        """Tells this thread to stop and skip over all remaining work. Files will also be deleted"""
+
+        self.thread_active = False
 
 
     def makeMod(self):
         # set seed before we start any random generation
         random.seed(self.seed)
+
+        if self.settings['Weapons'] or self.settings['Levels'] or self.settings['Thangs']:
+            self.editLevels()
 
         # get weapon data
         with open(DATA_PATH / 'Weapons.yml', 'r') as f:
@@ -184,7 +203,24 @@ class Metro_Process(QThread):
             self.writeFile('Map', f'{map}.szs', sarc_data.repack())
 
 
-    def randomizeAesthetics(self, map_data):
+    def editLevels(self) -> None:
+        """Randomizes weapons and level locations depending on user settings"""
+        return
+
+
+    def moveThangs(self) -> None:
+        """Randomizes the location of the four Thangs. This is done before the rest of the levels"""
+        return
+
+
+    def addSpecialSetter(self) -> None:
+        """Adds an object to certain levels that forces the player into an infinite Inkjet or Baller"""
+        return
+
+
+    def randomizeAesthetics(self, map_data) -> None:
+        """Randomizes music and ink color depending on user settings"""
+
         musics = set()
         colors = set()
         for map in map_data.info:
@@ -219,8 +255,3 @@ class Metro_Process(QThread):
         full_out_path.mkdir(parents=True, exist_ok=True)
         with open(full_out_path / name, "wb") as f:
             f.write(data)
-
-
-    # STOP THREAD
-    def stop(self):
-        self.thread_active = False
