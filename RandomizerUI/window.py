@@ -284,7 +284,7 @@ class WorkWindow(QMainWindow):
     def workError(self, er_message: str) -> None:
         self.error = True
         with open(LOGS_PATH, 'w') as f:
-            f.write(f"{self.settings['Seed']}")
+            f.write(f"{self.windowTitle()}")
             f.write(f'\n\n{er_message}')
             f.write(f'\n\n{self.settings}')
 

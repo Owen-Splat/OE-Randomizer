@@ -8,17 +8,31 @@ from pathlib import Path
 class Metro_Process(QThread):
     error = Signal(str)
     is_done = Signal()
+    thread_active = True
 
 
     def __init__(self, parent, settings) -> None:
         QThread.__init__(self, parent)
-        random.seed(settings['Seed'])
-        self.settings = settings
         self.base_path = Path(settings['Base_Path'])
         self.dlc_path = Path(settings['DLC_Path'])
         self.out_path = Path(settings['Output_Path']) / str(settings['Seed'])
-        self.thread_active = True
-        self.levels = {}
+        self.seed = settings['Seed']
+        del settings['Base_Path']
+        del settings['DLC_Path']
+        del settings['Output_Path']
+        del settings['Seed']
+        self.settings = settings
+
+        # remove old files first if they exist
+        if self.out_path.exists():
+            shutil.rmtree(self.out_path)
+
+        # now update the output path to match platform formatting
+        if settings['Platform'] == "Console":
+            rg = settings['Region']
+            title_id = "" # different title ids for the different regions that I'm too lazy to look up right now :)
+            self.out_path = self.out_path / "atmosphere" / "contents" / title_id
+        self.out_path = self.out_path / "romfs"
 
 
     # automatically called when this thread is started
@@ -34,9 +48,8 @@ class Metro_Process(QThread):
 
 
     def makeMod(self):
-        # remove old files first
-        if self.out_path.exists():
-            shutil.rmtree(self.out_path)
+        # set seed before we start any random generation
+        random.seed(self.seed)
 
         # get weapon data
         with open(DATA_PATH / 'Weapons.yml', 'r') as f:
@@ -129,6 +142,7 @@ class Metro_Process(QThread):
                     sarc_data = zs_tools.SARC(data=f.read(), compressed=True)
                 info_file = f"{map}.byaml"
                 map_data = zs_tools.BYAML(data=sarc_data.writer.files[info_file], compressed=False)
+                print(map)
             except FileNotFoundError:
                 print('Map object for special not found:', map)
                 continue
@@ -151,10 +165,19 @@ class Metro_Process(QThread):
             if special_setter > -1:
                 del map_data.info['Objs'][special_setter]
             if special_num > -1:
-                copied_actor['UnitConfigName'] = 'AlwaysSpecialSetterOcta'
-                copied_actor['Type'] = oead.S32(special_num) # 0=JetPack, 1=Baller, 2=Baller, 3+=None
-                copied_actor['Id'] = 'PatchSpecialSetter' # I think ID can be any unique string
-                map_data.info['Objs'].append(copied_actor) # add the new object to the obj list
+                special_obj = {}
+                special_obj['Id'] = 'PatchSpecialSetter'
+                special_obj['IsLinkDest'] = False
+                special_obj['LayerConfigName'] = 'Cmn'
+                special_obj['Links'] = {}
+                special_obj['ModelName'] = None
+                special_obj['Rotate'] = {'X': oead.F32(0.0), 'Y': oead.F32(0.0), 'Z': oead.F32(0.0)}
+                special_obj['Scale'] = {'X': oead.F32(1.0), 'Y': oead.F32(1.0), 'Z': oead.F32(1.0)}
+                special_obj['Team'] = oead.S32(2)
+                special_obj['Translate'] = {'X': oead.F32(0.0), 'Y': oead.F32(0.0), 'Z': oead.F32(0.0)}
+                special_obj['Type'] = oead.S32(special_num) # 0=JetPack, 1=Baller, 2=Baller, 3+=None
+                special_obj['UnitConfigName'] = 'AlwaysSpecialSetterOcta'
+                map_data.info['Objs'].insert(0, special_obj) # add the new object to the obj list
 
             # write everything
             sarc_data.writer.files[info_file] = map_data.repack()
@@ -192,7 +215,7 @@ class Metro_Process(QThread):
             The raw data to write to the file
         """
 
-        full_out_path = self.out_path / "RomFS" / path
+        full_out_path = self.out_path / path
         full_out_path.mkdir(parents=True, exist_ok=True)
         with open(full_out_path / name, "wb") as f:
             f.write(data)
