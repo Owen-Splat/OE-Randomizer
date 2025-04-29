@@ -191,19 +191,17 @@ Main_Weapons:
   - Charger_Light_00
   - Charger_Normal_00
   - Shooter_First_00
-  - AquaBall
-  - Jetpack
 
 Sub_Weapons:
-  - Bomb_Suction
-  - PointSensor
-  - Bomb_Splash
-  - Bomb_Robo
-  - Bomb_Quick
-  - Bomb_Curling
-  - PoisonFog
-  - Bomb_Tako
-  - Bomb_Piyo
+  - Bomb_Suction # Suction Bomb
+  - PointSensor # Point Sensor
+  - Bomb_Splash # Splat Bomb
+  - Bomb_Robo # Autobomb
+  - Bomb_Quick # Burst Bomb
+  - Bomb_Curling # Curling Bomb
+  - PoisonFog # Toxic Mist
+  # - Bomb_Tako # Torpedo
+  - Bomb_Piyo # Fizzy Bomb
 
 Special_Weapons:
   - SuperStamp # Ultra Stamp
