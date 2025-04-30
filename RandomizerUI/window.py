@@ -53,7 +53,7 @@ class RandomizerWindow(QMainWindow):
             seed = self.createSeed()
 
         settings = self.getSettings()
-        settings["seed"] = seed
+        settings["Seed"] = seed
 
         rando_window = WorkWindow(self, settings)
         rando_window.show()
