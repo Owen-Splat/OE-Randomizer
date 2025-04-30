@@ -11,13 +11,13 @@ if getattr(sys, "frozen", False):
         SETTINGS_PATH = userdata_path / 'settings.txt'
         LOGS_PATH = userdata_path / 'log.txt'
     else:
-        SETTINGS_PATH = Path('.' / 'settings.txt')
-        LOGS_PATH = Path('.' / 'log.txt')
+        SETTINGS_PATH = Path('.') / 'settings.txt'
+        LOGS_PATH = Path('.') / 'log.txt'
 else:
     RUNNING_FROM_SOURCE = True
     ROOT_PATH = Path(sys.argv[0]).parent.absolute()
-    SETTINGS_PATH = Path(ROOT_PATH / 'settings.txt')
-    LOGS_PATH = Path(ROOT_PATH / 'log.txt')
+    SETTINGS_PATH = ROOT_PATH / 'settings.txt'
+    LOGS_PATH = ROOT_PATH / 'log.txt'
 
-DATA_PATH = Path(ROOT_PATH / 'RandomizerCore' / 'Data')
-RESOURCE_PATH = Path(ROOT_PATH / 'RandomizerUI' / 'Resources')
+DATA_PATH = ROOT_PATH / 'RandomizerCore' / 'Data'
+RESOURCE_PATH = ROOT_PATH / 'RandomizerUI' / 'Resources'
