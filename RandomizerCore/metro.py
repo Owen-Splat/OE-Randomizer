@@ -2,7 +2,7 @@ from PySide6.QtCore import QThread, Signal
 import RandomizerCore.Tools.zs_tools as zs_tools
 import RandomizerCore.Tools.nisasyst as nisasyst
 from randomizer_data import DATA_PATH
-import random, oead, yaml, copy, traceback, shutil
+import random, oead, yaml, traceback, shutil
 from pathlib import Path
 
 class Metro_Process(QThread):
@@ -28,6 +28,8 @@ class Metro_Process(QThread):
             shutil.rmtree(self.root_out_path)
 
         # now update the output path to match platform formatting
+        # rainbow expansion looks like it uses both base game and oe romfs for console
+        # just base game romfs worked for side order mods, so I will need to test on console to see if oe romfs is needed
         if settings['Platform'] == "Console":
             match settings['Region']:
                 case 'EU':
@@ -67,82 +69,22 @@ class Metro_Process(QThread):
         # set seed before we start any random generation
         random.seed(self.seed)
 
-        if self.settings['Weapons'] or self.settings['Levels'] or self.settings['Thangs']:
-            self.editLevels()
-
-        # get weapon data
-        with open(DATA_PATH / 'Weapons.yml', 'r') as f:
-            weapons = yaml.safe_load(f)
-
         # read data
         with open(self.base_path / 'Pack' / 'Mush.release.pack', 'rb') as f:
             sarc_data = zs_tools.SARC(data=f.read(), compressed=False)
 
-        # read map data
+        # read map info data
         info_file = 'Mush/Octa2DMapInfo.byml'
         container = nisasyst.NisasystContainer(info_file, bytes(sarc_data.writer.files[info_file]))
         map_data = zs_tools.BYAML(data=container.data, compressed=False)
 
+        self.defineLevels(map_data)
+
         # edit data
-        total_maps = [map['MapName'] for map in map_data.info
-                    if map['MapName'].endswith('Msn') and
-                    not map['MapName'].startswith((
-                        'Fld_OctKey',
-                        'Fld_OctBoss',
-                        'Fld_OctShowdown',
-                        'Fld_OctLastBoss',
-                        'Fld_OctIntroduction'
-                    ))]
-        map_names = copy.deepcopy(total_maps)
-        random.shuffle(map_names)
+        if self.settings['Weapons'] or self.settings['Levels'] or self.settings['Thangs']:
+            self.editLevels(map_data)
 
-        maps_to_add_special = {}
-        for map in map_data.info:
-            # store the new map to swap this entry to after we use the vanilla data
-            if map['MapName'] in total_maps:
-                new_map = map_names.pop(0)
-
-            # check if vanilla level is an infinite special level
-            vspecial = False
-            if map['MainA'] in ('Jetpack', 'AquaBall'):
-                vspecial = True
-
-            # edit weapons
-            if random.randint(1, 12) == 7:
-                map['MainA'] = random.choice(('Jetpack', 'AquaBall'))
-                map['SubA'] = '-'
-                map['MainB'] = '-'
-                map['SubB'] = '-'
-                map['MainC'] = '-'
-                map['SubB'] = '-'
-                special_num = 0 if map['MainA'] == 'Jetpack' else 1
-                maps_to_add_special[new_map] = special_num
-            else:
-                if vspecial and map['MapName'] not in maps_to_add_special:
-                    maps_to_add_special[map['MapName']] = -1
-                no_dups = copy.deepcopy(weapons['Main_Weapons'])
-                mainA = no_dups.pop(random.randrange(0, len(no_dups)))
-                mainB = no_dups.pop(random.randrange(0, len(no_dups)))
-                mainC = no_dups.pop(random.randrange(0, len(no_dups)))
-                map['MainA'] = mainA
-                map['MainB'] = mainB
-                map['MainC'] = mainC
-                map['SubA'] = random.choice(weapons['Sub_Weapons'])
-                map['SubB'] = random.choice(weapons['Sub_Weapons'])
-                map['SubC'] = random.choice(weapons['Sub_Weapons'])
-                if map['RewardB'] == oead.S32(0):
-                    map['RewardB'] = oead.S32(int(map['RewardA']) + 100)
-                if map['RewardC'] == oead.S32(0):
-                    map['RewardC'] = oead.S32(int(map['RewardB']) + 200)
-
-            # save myself credits when testing lol
-            map['Admission'] = oead.S32(0)
-
-            # now change the map
-            if map['MapName'] in total_maps:
-                map['MapName'] = new_map
-
-        # write map data
+        # write map info data
         container.data = bytes(map_data.repack())
         sarc_data.writer.files[info_file] = container.repack()
 
@@ -153,69 +95,141 @@ class Metro_Process(QThread):
         sarc_data.writer.files[info_file] = map_data.repack()
         self.writeFile('Pack', 'Mush.release.pack', sarc_data.repack())
 
-        # now we need to edit the object list for the maps that need an actor to activate specials
-        for map, special_num in maps_to_add_special.items():
-            # read file & object list
-            try:
-                with open(self.dlc_path / "Map" / f"{map}.szs", 'rb') as f:
-                    sarc_data = zs_tools.SARC(data=f.read(), compressed=True)
-                info_file = f"{map}.byaml"
-                map_data = zs_tools.BYAML(data=sarc_data.writer.files[info_file], compressed=False)
-                print(map)
-            except FileNotFoundError:
-                print('Map object for special not found:', map)
-                continue
-
-            # edit object list
-            copied_actor = None
-            special_setter = -1
-            for i, obj in enumerate(map_data.info['Objs']):
-                if obj['UnitConfigName'] == 'AlwaysSpecialSetterOcta':
-                    copied_actor = dict(obj)
-                    special_setter = i
-                    break
-                if obj['UnitConfigName'] == 'Obj_CheckPointFirstOcta':
-                    copied_actor = dict(obj)
-                elif obj['UnitConfigName'] == 'Obj_SupplyPointOcta' and copied_actor == None:
-                    copied_actor = dict(obj)
-            if copied_actor == None: # This means it's a thang or a level we will keep vanilla later anyway
-                print('no first checkpoint or weapon supplier', map)
-                continue
-            if special_setter > -1:
-                del map_data.info['Objs'][special_setter]
-            if special_num > -1:
-                special_obj = {}
-                special_obj['Id'] = 'PatchSpecialSetter'
-                special_obj['IsLinkDest'] = False
-                special_obj['LayerConfigName'] = 'Cmn'
-                special_obj['Links'] = {}
-                special_obj['ModelName'] = None
-                special_obj['Rotate'] = {'X': oead.F32(0.0), 'Y': oead.F32(0.0), 'Z': oead.F32(0.0)}
-                special_obj['Scale'] = {'X': oead.F32(1.0), 'Y': oead.F32(1.0), 'Z': oead.F32(1.0)}
-                special_obj['Team'] = oead.S32(2)
-                special_obj['Translate'] = {'X': oead.F32(0.0), 'Y': oead.F32(0.0), 'Z': oead.F32(0.0)}
-                special_obj['Type'] = oead.S32(special_num) # 0=JetPack, 1=Baller, 2=Baller, 3+=None
-                special_obj['UnitConfigName'] = 'AlwaysSpecialSetterOcta'
-                map_data.info['Objs'].insert(0, special_obj) # add the new object to the obj list
-
-            # write everything
-            sarc_data.writer.files[info_file] = map_data.repack()
-            self.writeFile('Map', f'{map}.szs', sarc_data.repack())
+        self.editMapObjs()
 
 
-    def editLevels(self) -> None:
+    def defineLevels(self, map_data: zs_tools.BYAML) -> None:
+        """Makes a list of map names and randomizes levels"""
+
+        # grab valid level names from the map info data
+        self.map_names = {map['UIID'].v: map['MapName'] for map in map_data.info
+                    if map['UIID'].v < 84}
+        if len(self.map_names) != 84:
+            raise IndexError(f"Not enough maps found. Total found: {len(self.map_names)}")
+
+        if not self.settings['Levels'] and not self.settings['Thangs']:
+            return
+
+        with open(DATA_PATH / 'StageList.yml', 'r') as f:
+            stages: dict = yaml.safe_load(f)
+
+        ids = list(range(80))
+
+        # define empty lines
+        lines = []
+        for i in range(10):
+            lines.append([])
+        line_level_counts = [8, 15, 13, 9, 12, 8, 6, 6, 4, 3]
+
+        # shuffle levels
+        for i, line in enumerate(lines):
+            while len(line) < line_level_counts[i] - 1: # leave an empty space in each line for the thangs
+                if not self.settings['Thangs']:
+                    i2 = len(line)
+                    if stages[list(stages.keys())[i]][i2] in [80, 81, 82, 83]:
+                        line.append(stages[list(stages.keys())[i]][i2])
+                        continue
+                new_id = random.choice(ids)
+                line.append(new_id)
+                ids.remove(new_id)
+
+        # now select random lines for the thangs
+        if self.settings['Thangs']:
+            lines_with_thangs = []
+            line_nums = list(range(10))
+            for i in range(4):
+                line_num = random.choice(line_nums)
+                while line_num in lines_with_thangs:
+                    line_num = random.choice(line_nums)
+                lines_with_thangs.append(line_num)
+                line_nums.remove(line_num)
+            for i, line in enumerate(lines_with_thangs):
+                thang = 80 + i
+                if random.random() >= 0.5:
+                    lines[line].append(thang)
+                else:
+                    lines[line].insert(0, thang)
+
+        # finish shuffling levels
+        for i, line in enumerate(lines):
+            while len(line) < line_level_counts[i]:
+                new_id = random.choice(ids)
+                line.append(new_id)
+                ids.remove(new_id)
+
+        # now compare the vanilla and new lines to make a dictionary mapping of old and new IDs
+        self.stages = {}
+        for i, (k,v) in enumerate(stages.items()):
+            for i2, id in enumerate(v):
+                self.stages[id] = lines[i][i2]
+
+
+    def editLevels(self, map_data: zs_tools.BYAML) -> None:
         """Randomizes weapons and level locations depending on user settings"""
-        return
 
+        if not self.thread_active:
+            return
 
-    def moveThangs(self) -> None:
-        """Randomizes the location of the four Thangs. This is done before the rest of the levels"""
-        return
+        # get weapon data if needed
+        if self.settings['Weapons']:
+            with open(DATA_PATH / 'Weapons.yml', 'r') as f:
+                weapons = yaml.safe_load(f)
+            first_weapons = {}
+            for map in map_data.info:
+                if map['MapName'] in list(self.map_names.values()):
+                    first_weapons[map['MapName']] = {'Main': map['MainA'], 'Sub': map['SubA']}
 
+        self.maps_to_add_special = {}
 
-    def addSpecialSetter(self) -> None:
-        """Adds an object to certain levels that forces the player into an infinite Inkjet or Baller"""
-        return
+        for map in map_data.info:
+            if map['UIID'].v > 83:
+                continue
+
+            new_map = self.map_names[self.stages[map['UIID'].v]]
+            map['MapName'] = new_map
+
+            # save myself credits when testing lol
+            map['Admission'] = oead.S32(0)
+
+            if not self.settings['Weapons']:
+                continue
+
+            # check if new level is an infinite special level
+            vspecial = first_weapons[new_map]['Main'] in ('Jetpack', 'AquaBall')
+            if vspecial:
+                map['MainA'] = first_weapons[new_map]['Main']
+                map['SubA'] = '-'
+                map['MainB'] = '-'
+                map['SubB'] = '-'
+                map['MainC'] = '-'
+                map['SubC'] = '-'
+                continue
+
+            # 5% chance for a special per stage
+            if random.randint(0, 19) == random.choice(list(range(20))):
+                map['MainA'] = random.choice(('Jetpack', 'AquaBall'))
+                map['SubA'] = '-'
+                map['MainB'] = '-'
+                map['SubB'] = '-'
+                map['MainC'] = '-'
+                map['SubB'] = '-'
+                self.maps_to_add_special[new_map] = map['MainA']
+                continue
+
+            # if not a special level, make the first weapon vanilla and randomize the next 2
+            no_dups = list(weapons['Main_Weapons']).copy()
+            mainB = no_dups.pop(no_dups.index(random.choice(no_dups)))
+            mainC = no_dups.pop(no_dups.index(random.choice(no_dups)))
+            map['MainA'] = first_weapons[new_map]['Main']
+            map['MainB'] = mainB
+            map['MainC'] = mainC
+            map['SubA'] = first_weapons[new_map]['Sub']
+            map['SubB'] = random.choice(weapons['Sub_Weapons'])
+            map['SubC'] = random.choice(weapons['Sub_Weapons'])
+            if map['RewardB'] == oead.S32(0):
+                map['RewardB'] = oead.S32(int(map['RewardA']) + 100)
+            if map['RewardC'] == oead.S32(0):
+                map['RewardC'] = oead.S32(int(map['RewardB']) + 200)
 
 
     def randomizeAesthetics(self, map_data) -> None:
@@ -236,6 +250,69 @@ class Metro_Process(QThread):
         for map in map_data.info:
             map['BGMType'] = random.choice(musics)
             map['FixTeamColor'] = random.choice(colors)
+
+
+    def editMapObjs(self) -> None:
+        """Edits maps to add/remove stuff as necessary"""
+
+        with open(self.base_path / 'Pack' / 'Map.pack', 'rb') as f:
+            sarc_data = zs_tools.SARC(data=f.read(), compressed=False)
+
+        for k,map in self.map_names.items():
+            # read file & object list
+            try:
+                map_sarc_name = f"Map/{map}.szs"
+                map_sarc = zs_tools.SARC(data=sarc_data.writer.files[map_sarc_name], compressed=True)
+                info_file = f"{map}.byaml"
+                map_data = zs_tools.BYAML(data=map_sarc.writer.files[info_file], compressed=False)
+            except KeyError:
+                print('Map object not found:', map)
+                continue
+
+            if self.settings['Enemy Ink Is Lava']:
+                map_data.info['Objs'].append(self.makeSuddenDeathObj())
+            if map in self.maps_to_add_special:
+                map_data.info['Objs'].append(self.makeSpecialSetterObj(self.maps_to_add_special[map]))
+
+            map_sarc.writer.files[info_file] = map_data.repack()
+            sarc_data.writer.files[map_sarc_name] = map_sarc.repack()
+
+        self.writeFile('Pack', 'Map.pack', sarc_data.repack())
+
+
+    def makeSuddenDeathObj(self) -> dict:
+        """Returns a new object to be added to maps that need the Enemy Ink Is Lava challenge"""
+
+        obj = {}
+        obj['Id'] = 'PatchSuddenDeath'
+        obj['IsLinkDest'] = False
+        obj['LayerConfigName'] = 'Cmn'
+        obj['Links'] = {}
+        obj['ModelName'] = None
+        obj['Rotate'] = {'X': oead.F32(0.0), 'Y': oead.F32(0.0), 'Z': oead.F32(0.0)}
+        obj['Scale'] = {'X': oead.F32(1.0), 'Y': oead.F32(1.0), 'Z': oead.F32(1.0)}
+        obj['Team'] = oead.S32(2)
+        obj['Translate'] = {'X': oead.F32(0.0), 'Y': oead.F32(0.0), 'Z': oead.F32(0.0)}
+        obj['UnitConfigName'] = 'DamageSuddenDeathObjOcta'
+        return obj
+
+
+    def makeSpecialSetterObj(self, special: str) -> dict:
+        """Returns a new object to be added to maps that need an infinite special modifier"""
+
+        obj = {}
+        obj['Id'] = 'PatchSpecialSetter'
+        obj['IsLinkDest'] = False
+        obj['LayerConfigName'] = 'Cmn'
+        obj['Links'] = {}
+        obj['ModelName'] = None
+        obj['Rotate'] = {'X': oead.F32(0.0), 'Y': oead.F32(0.0), 'Z': oead.F32(0.0)}
+        obj['Scale'] = {'X': oead.F32(1.0), 'Y': oead.F32(1.0), 'Z': oead.F32(1.0)}
+        obj['Team'] = oead.S32(2)
+        obj['Translate'] = {'X': oead.F32(0.0), 'Y': oead.F32(0.0), 'Z': oead.F32(0.0)}
+        obj['Type'] = oead.S32(0 if special=='Jetpack' else 1)
+        obj['UnitConfigName'] = 'AlwaysSpecialSetterOcta'
+        return obj
 
 
     def writeFile(self, path: str, name: str, data: bytes):
