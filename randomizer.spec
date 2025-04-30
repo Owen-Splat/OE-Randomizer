@@ -6,8 +6,8 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-        ('RandomizerCore/Data/StageList.yml', 'Data'),
-        ('RandomizerCore/Data/Weapons.yml', 'Data')
+        ('RandomizerCore/Data/StageList.yml', 'RandomizerCore/Data'),
+        ('RandomizerCore/Data/Weapons.yml', 'RandomizerCore/Data')
     ],
     hiddenimports=[],
     hookspath=[],
