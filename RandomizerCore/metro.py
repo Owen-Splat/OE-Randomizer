@@ -1,7 +1,7 @@
 from PySide6.QtCore import QThread, Signal
 import RandomizerCore.Tools.zs_tools as zs_tools
 import RandomizerCore.Tools.nisasyst as nisasyst
-from randomizer_data import DATA_PATH
+from randomizer_paths import DATA_PATH
 import random, oead, yaml, traceback, shutil
 from pathlib import Path
 
