@@ -1,0 +1,5 @@
+- randomize backgrounds
+- randomize music (I think it doesn't work currently? I need to compare with vanilla music lol)
+- memcakes
+- disable Thangs option when Levels is not checked
+- add proper logic
