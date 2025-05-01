@@ -89,11 +89,12 @@ class Metro_Process(QThread):
         sarc_data.writer.files[info_file] = container.repack()
 
         # randomize music and ink color
-        info_file = 'Mush/MapInfo.release.byml'
-        map_data = zs_tools.BYAML(data=sarc_data.writer.files[info_file], compressed=False)
-        self.randomizeAesthetics(map_data)
-        sarc_data.writer.files[info_file] = map_data.repack()
-        self.writeFile('Pack', 'Mush.release.pack', sarc_data.repack())
+        if self.settings['Ink Color'] or self.settings['Music']:
+            info_file = 'Mush/MapInfo.release.byml'
+            map_data = zs_tools.BYAML(data=sarc_data.writer.files[info_file], compressed=False)
+            self.randomizeAesthetics(map_data)
+            sarc_data.writer.files[info_file] = map_data.repack()
+            self.writeFile('Pack', 'Mush.release.pack', sarc_data.repack())
 
         self.editMapObjs()
 
@@ -237,19 +238,26 @@ class Metro_Process(QThread):
 
         musics = set()
         colors = set()
+        backgrounds = set()
         for map in map_data.info:
-            if 'BGMType' in map:
+            if 'BGMType' in map and str(map['MapFileName']).endswith('Msn') and self.settings['Music']:
                 musics.add(map['BGMType'])
-            if 'FixTeamColor' in map:
+            if 'FixTeamColor' in map and self.settings['Ink Color']:
                 colors.add(map['FixTeamColor'])
-        
+            if 'SndSceneEnv' in map and self.settings['Backgrounds']:
+                backgrounds.add(map['SndSceneEnv'])
+
         musics = list(musics)
         random.shuffle(musics)
         colors = list(colors)
         random.shuffle(colors)
         for map in map_data.info:
-            map['BGMType'] = random.choice(musics)
-            map['FixTeamColor'] = random.choice(colors)
+            if self.settings['Music']:
+                map['BGMType'] = random.choice(musics)
+            if self.settings['Ink Color']:
+                map['FixTeamColor'] = random.choice(colors)
+            if self.settings['Backgrounds']:
+                map['SndSceneEnv'] = random.choice(backgrounds)
 
 
     def editMapObjs(self) -> None:
