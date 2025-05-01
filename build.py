@@ -17,7 +17,7 @@ if platform.system() == "Linux":
     platform_name = "linux"
 
 exe_path = Path(sys.argv[0]).parent.absolute() / 'dist' / str(base_name + exe_ext)
-if not exe_path.is_file():
+if not (exe_path.is_file() or exe_path.is_dir()):
     raise Exception("Executable not found: %s" % exe_path)
 
 release_path = Path(".") / "dist" / str("release_archive_" + version)
