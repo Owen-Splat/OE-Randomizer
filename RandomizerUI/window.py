@@ -111,8 +111,11 @@ class RandomizerWindow(QMainWindow):
         for check in self.findChildren(QCheckBox):
             check: QCheckBox
             settings[check.text()] = check.isChecked()
-        settings["Region"] = self.ui.region_box.currentText()[-2:]
-        settings["Platform"] = self.ui.platform_box.currentText().split(":  ")[1]
+        for box in self.findChildren(QComboBox):
+            box: QComboBox
+            setting_name = box.currentText().split(':')[0]
+            choice = box.currentText().split(':')[1].strip()
+            settings[setting_name] = choice
         return settings
 
 
@@ -127,15 +130,27 @@ class RandomizerWindow(QMainWindow):
             return
         with open(SETTINGS_PATH, 'r') as f:
             settings = yaml.safe_load(f)
-        self.ui.base_line.setText(settings['Base_RomFS_Path'])
-        # self.ui.dlc_line.setText(settings['DLC_Path'])
-        self.ui.out_line.setText(settings['Output_Path'])
-        self.ui.seed_line.setText(settings['Seed'])
+
+        if 'Base_RomFS_Path' in settings:
+            self.ui.base_line.setText(settings['Base_RomFS_Path'])
+        # if 'DLC_Path' in settings:
+        #     self.ui.dlc_line.setText(settings['DLC_Path'])
+        if 'Output_Path' in settings:
+            self.ui.out_line.setText(settings['Output_Path'])
+        if 'Seed' in settings:
+            self.ui.seed_line.setText(settings['Seed'])
         for check in self.findChildren(QCheckBox):
             check: QCheckBox
-            check.setChecked(settings[check.text()])
-        self.ui.region_box.setCurrentIndex(self.ui.region_box.findText(f"Region:  {settings['Region']}"))
-        self.ui.platform_box.setCurrentIndex(self.ui.platform_box.findText(f"Platform:  {settings['Platform']}"))
+            if check.text() in settings:
+                check.setChecked(settings[check.text()])
+        for box in self.findChildren(QComboBox):
+            box: QComboBox
+            setting_name = box.currentText().split(':')[0]
+            if setting_name in settings:
+                index = box.findText(f"{setting_name}:  {settings[setting_name]}")
+                if index == -1:
+                    index = 0
+                box.setCurrentIndex(index)
 
 
     def closeEvent(self, event) -> None:
@@ -204,24 +219,40 @@ class Ui_RandomizerWindow(object):
         group.setStyleSheet("QGroupBox {font-size: 12px; font-weight: bold;}")
         weapon_check = QCheckBox("Weapons", group)
         level_check = QCheckBox("Levels", group)
-        thang_check = QCheckBox("Thangs", group)
+        thang_box = QComboBox(group)
+        thang_box.addItems((
+            "Thangs:  Vanilla",
+            "Thangs:  Restricted",
+            "Thangs:  Anywhere"
+        ))
+        beatable_check = QCheckBox("First Weapon Vanilla", group)
+        lava_check = QCheckBox("Enemy Ink Is Lava", group)
+        background_check = QCheckBox("Backgrounds", group)
         color_check = QCheckBox("Ink Color", group)
         music_check = QCheckBox("Music", group)
-        lava_check = QCheckBox("Enemy Ink Is Lava", group)
         hl = QHBoxLayout()
         hl.addWidget(weapon_check)
         hl.addSpacerItem(self.createHorizontalSpacer())
         hl.addWidget(level_check)
         hl.addSpacerItem(self.createHorizontalSpacer())
-        hl.addWidget(thang_check)
+        hl.addWidget(thang_box)
         ovl = QVBoxLayout()
         ovl.addLayout(hl)
         hl = QHBoxLayout()
+        hl.addWidget(beatable_check)
+        hl.addSpacerItem(self.createHorizontalSpacer())
+        hl.addWidget(lava_check)
+        hl.addSpacerItem(self.createHorizontalSpacer())
+        placeholder_space = QLabel()
+        placeholder_space.setFixedWidth(150)
+        hl.addWidget(placeholder_space)
+        ovl.addLayout(hl)
+        hl = QHBoxLayout()
+        hl.addWidget(background_check)
+        hl.addSpacerItem(self.createHorizontalSpacer())
         hl.addWidget(color_check)
         hl.addSpacerItem(self.createHorizontalSpacer())
         hl.addWidget(music_check)
-        hl.addSpacerItem(self.createHorizontalSpacer())
-        hl.addWidget(lava_check)
         ovl.addLayout(hl)
         group.setLayout(ovl)
         vl.addWidget(group)
@@ -246,12 +277,13 @@ class Ui_RandomizerWindow(object):
         hl.addSpacerItem(self.createHorizontalSpacer())
         hl.addWidget(button)
         vl.addLayout(hl)
-        self.region_box = region_box
-        self.platform_box = platform_box
 
         widget.setLayout(vl)
         window.setCentralWidget(widget)
 
+        # make settings all a consistent size
+        for box in window.findChildren(QComboBox):
+            box.setFixedWidth(150)
         for check in window.findChildren(QCheckBox):
             check.setFixedWidth(150)
 
