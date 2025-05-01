@@ -251,6 +251,8 @@ class Metro_Process(QThread):
         random.shuffle(musics)
         colors = list(colors)
         random.shuffle(colors)
+        backgrounds = list(backgrounds)
+        random.shuffle(backgrounds)
         for map in map_data.info:
             if self.settings['Music']:
                 map['BGMType'] = random.choice(musics)
