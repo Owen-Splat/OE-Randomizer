@@ -60,25 +60,25 @@ class RandomizerWindow(QMainWindow):
 
 
     def validatePaths(self) -> bool:
-        """Validates both the base and DLC RomFS paths as well as checking if the output path exists"""
+        """Validates the romfs path as well as checking if the output path exists"""
 
         romfs_path = Path(self.ui.base_line.text())
         if Path(romfs_path / "romfs").exists():
             romfs_path = romfs_path / "romfs"
         romfs_valid = Path(romfs_path / "Pack" / "Mush.release.pack").is_file()
 
-        dlc_path = Path(self.ui.dlc_line.text())
-        if Path(dlc_path / "romfs").exists():
-            dlc_path = dlc_path / "romfs"
-        dlc_valid = Path(dlc_path / "Layout" / "OctBackBtn_00.Nin_NX_NVN.szs").is_file()
+        # dlc_path = Path(self.ui.dlc_line.text())
+        # if Path(dlc_path / "romfs").exists():
+        #     dlc_path = dlc_path / "romfs"
+        # dlc_valid = Path(dlc_path / "Layout" / "OctBackBtn_00.Nin_NX_NVN.szs").is_file()
 
         out_path = Path(self.ui.out_line.text())
         output_valid = out_path.exists()
 
         self.ui.base_line.setStyleSheet('')
-        self.ui.dlc_line.setStyleSheet('')
+        # self.ui.dlc_line.setStyleSheet('')
         self.ui.out_line.setStyleSheet('')
-        if all((romfs_valid, dlc_valid, output_valid)):
+        if all((romfs_valid, output_valid)):
             return True
 
         red = "background-color: red;"
@@ -89,10 +89,10 @@ class RandomizerWindow(QMainWindow):
         else:
             self.ui.base_line.setStyleSheet(green)
 
-        if not dlc_valid:
-            self.ui.dlc_line.setStyleSheet(red)
-        else:
-            self.ui.dlc_line.setStyleSheet(green)
+        # if not dlc_valid:
+        #     self.ui.dlc_line.setStyleSheet(red)
+        # else:
+        #     self.ui.dlc_line.setStyleSheet(green)
 
         if not output_valid:
             self.ui.out_line.setStyleSheet(red)
@@ -104,8 +104,8 @@ class RandomizerWindow(QMainWindow):
 
     def getSettings(self) -> dict:
         settings = {}
-        settings['Base_Path'] = self.ui.base_line.text()
-        settings['DLC_Path'] = self.ui.dlc_line.text()
+        settings['Base_RomFS_Path'] = self.ui.base_line.text()
+        # settings['DLC_Path'] = self.ui.dlc_line.text()
         settings['Output_Path'] = self.ui.out_line.text()
         settings['Seed'] = self.ui.seed_line.text()
         for check in self.findChildren(QCheckBox):
@@ -127,8 +127,8 @@ class RandomizerWindow(QMainWindow):
             return
         with open(SETTINGS_PATH, 'r') as f:
             settings = yaml.safe_load(f)
-        self.ui.base_line.setText(settings['Base_Path'])
-        self.ui.dlc_line.setText(settings['DLC_Path'])
+        self.ui.base_line.setText(settings['Base_RomFS_Path'])
+        # self.ui.dlc_line.setText(settings['DLC_Path'])
         self.ui.out_line.setText(settings['Output_Path'])
         self.ui.seed_line.setText(settings['Seed'])
         for check in self.findChildren(QCheckBox):
@@ -150,8 +150,8 @@ class Ui_RandomizerWindow(object):
         widget = QWidget()
         vl = QVBoxLayout()
 
-        label = QLabel("Base Path", widget)
-        label.setFixedWidth(80)
+        label = QLabel("Base RomFS Path", widget)
+        label.setFixedWidth(100)
         base_line = QLineEdit(widget)
         button = QPushButton("Browse", widget)
         button.clicked.connect(lambda: window.browseButtonClicked(base_line))
@@ -162,20 +162,20 @@ class Ui_RandomizerWindow(object):
         vl.addLayout(hl)
         self.base_line = base_line
 
-        label = QLabel("DLC Path", widget)
-        label.setFixedWidth(80)
-        dlc_line = QLineEdit(widget)
-        button = QPushButton("Browse", widget)
-        button.clicked.connect(lambda: window.browseButtonClicked(dlc_line))
-        hl = QHBoxLayout()
-        hl.addWidget(label)
-        hl.addWidget(dlc_line)
-        hl.addWidget(button)
-        vl.addLayout(hl)
-        self.dlc_line = dlc_line
+        # label = QLabel("DLC Path", widget)
+        # label.setFixedWidth(100)
+        # dlc_line = QLineEdit(widget)
+        # button = QPushButton("Browse", widget)
+        # button.clicked.connect(lambda: window.browseButtonClicked(dlc_line))
+        # hl = QHBoxLayout()
+        # hl.addWidget(label)
+        # hl.addWidget(dlc_line)
+        # hl.addWidget(button)
+        # vl.addLayout(hl)
+        # self.dlc_line = dlc_line
 
         label = QLabel("Output Path", widget)
-        label.setFixedWidth(80)
+        label.setFixedWidth(100)
         out_line = QLineEdit(widget)
         button = QPushButton("Browse", widget)
         button.clicked.connect(lambda: window.browseButtonClicked(out_line))
@@ -187,7 +187,7 @@ class Ui_RandomizerWindow(object):
         self.out_line = out_line
 
         label = QLabel("Optional Seed", widget)
-        label.setFixedWidth(80)
+        label.setFixedWidth(100)
         seed_line = QLineEdit(widget)
         seed_line.setPlaceholderText("Leave blank for random seed")
         button = QPushButton("Generate", widget)

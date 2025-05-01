@@ -13,12 +13,12 @@ class Metro_Process(QThread):
 
     def __init__(self, parent, settings) -> None:
         QThread.__init__(self, parent)
-        self.base_path = Path(settings['Base_Path'])
-        self.dlc_path = Path(settings['DLC_Path'])
+        self.base_path = Path(settings['Base_RomFS_Path'])
+        # self.dlc_path = Path(settings['DLC_Path'])
         self.root_out_path = Path(settings['Output_Path']) / str(settings['Seed'])
         self.seed = settings['Seed']
-        del settings['Base_Path']
-        del settings['DLC_Path']
+        del settings['Base_RomFS_Path']
+        # del settings['DLC_Path']
         del settings['Output_Path']
         del settings['Seed']
         self.settings = settings
