@@ -81,7 +81,7 @@ class Metro_Process(QThread):
         self.defineLevels(map_data)
 
         # edit data
-        if self.settings['Weapons'] or self.settings['Levels'] or self.settings['Thangs']:
+        if self.settings['Weapons'] or self.settings['Levels']:
             self.editLevels(map_data)
 
         # write map info data
@@ -94,13 +94,25 @@ class Metro_Process(QThread):
             map_data = zs_tools.BYAML(data=sarc_data.writer.files[info_file], compressed=False)
             self.randomizeAesthetics(map_data)
             sarc_data.writer.files[info_file] = map_data.repack()
-            self.writeFile('Pack', 'Mush.release.pack', sarc_data.repack())
 
+        # make all lines unlocked to for testing
+        info_file = 'Mush/Octa2DMapLineInfo.byml'
+        container = nisasyst.NisasystContainer(info_file, bytes(sarc_data.writer.files[info_file]))
+        map_data = zs_tools.BYAML(data=container.data, compressed=False)
+        for line in map_data.info:
+            line['OpenConditionStageList'] = '84'
+        container.data = bytes(map_data.repack())
+        sarc_data.writer.files[info_file] = container.repack()
+
+        self.writeFile('Pack', 'Mush.release.pack', sarc_data.repack())
         self.editMapObjs()
 
 
     def defineLevels(self, map_data: zs_tools.BYAML) -> None:
         """Makes a list of map names and randomizes levels"""
+
+        if not self.thread_active:
+            return
 
         # grab valid level names from the map info data
         self.map_names = {map['UIID'].v: map['MapName'] for map in map_data.info
@@ -114,7 +126,32 @@ class Metro_Process(QThread):
         with open(DATA_PATH / 'StageList.yml', 'r') as f:
             stages: dict = yaml.safe_load(f)
 
+        lines = self.moveLevels(stages)
+        while lines == None:
+            if not self.thread_active:
+                break
+            lines = self.moveLevels(stages)
+
+        # now compare the vanilla and new lines to make a dictionary mapping of old and new IDs
+        self.stages = {}
+        for i, (k,v) in enumerate(stages.items()):
+            if not self.thread_active:
+                break
+            for i2, id in enumerate(v):
+                if not self.thread_active:
+                    break
+                self.stages[id] = lines[i][i2]
+
+
+    def moveLevels(self, stages: dict) -> list | None:
+        if not self.thread_active:
+            return
+
         ids = list(range(80))
+
+        # only add thang ids to the pool if they shouldnt be vanilla
+        if self.settings['Thangs'] != 'Vanilla':
+            ids.extend([80, 81, 82, 83])
 
         # define empty lines
         lines = []
@@ -122,47 +159,44 @@ class Metro_Process(QThread):
             lines.append([])
         line_level_counts = [8, 15, 13, 9, 12, 8, 6, 6, 4, 3]
 
+        # thangs will not show the signal on the map if it overlaps with 2 different lines
+        thang_restricted_levels = [5, 10, 15, 24, 27, 30, 32, 34, 36, 40, 42, 47, 48, 49, 51, 52, 55, 62, 64, 67, 69, 79]
+
+        valid_levels = True
+
         # shuffle levels
         for i, line in enumerate(lines):
-            while len(line) < line_level_counts[i] - 1: # leave an empty space in each line for the thangs
-                if not self.settings['Thangs']:
-                    i2 = len(line)
+            if not valid_levels or not self.thread_active:
+                break
+
+            while len(line) < line_level_counts[i]:
+                if not self.thread_active:
+                    break
+                i2 = len(line)
+                if self.settings['Thangs'] == 'Vanilla':
                     if stages[list(stages.keys())[i]][i2] in [80, 81, 82, 83]:
                         line.append(stages[list(stages.keys())[i]][i2])
                         continue
                 new_id = random.choice(ids)
+                # if new_id is a thang but the vanilla level is a restricted level, reroll
+                while new_id in [80, 81, 82, 83] and stages[list(stages.keys())[i]][i2] in thang_restricted_levels:
+                    if len([l for l in ids if l not in thang_restricted_levels]) == 0: # break if there are no valid levels left
+                        valid_levels = False
+                        break
+                    new_id = random.choice(ids)
+                # prevent this line from having more than one thang if settings['Thangs'] == 'Restricted'
+                while new_id in [80, 81, 82, 83] and len([l for l in line if l in [80, 81, 82, 83]]) > 0 and self.settings['Thangs'] == 'Restricted':
+                    if len([l for l in ids if l not in [80, 81, 82, 83]]) == 0: # break if there are no valid levels left
+                        valid_levels = False
+                        break
+                    new_id = random.choice(ids)
                 line.append(new_id)
                 ids.remove(new_id)
 
-        # now select random lines for the thangs
-        if self.settings['Thangs']:
-            lines_with_thangs = []
-            line_nums = list(range(10))
-            for i in range(4):
-                line_num = random.choice(line_nums)
-                while line_num in lines_with_thangs:
-                    line_num = random.choice(line_nums)
-                lines_with_thangs.append(line_num)
-                line_nums.remove(line_num)
-            for i, line in enumerate(lines_with_thangs):
-                thang = 80 + i
-                if random.random() >= 0.5:
-                    lines[line].append(thang)
-                else:
-                    lines[line].insert(0, thang)
-
-        # finish shuffling levels
-        for i, line in enumerate(lines):
-            while len(line) < line_level_counts[i]:
-                new_id = random.choice(ids)
-                line.append(new_id)
-                ids.remove(new_id)
-
-        # now compare the vanilla and new lines to make a dictionary mapping of old and new IDs
-        self.stages = {}
-        for i, (k,v) in enumerate(stages.items()):
-            for i2, id in enumerate(v):
-                self.stages[id] = lines[i][i2]
+        if valid_levels:
+            return lines
+        else:
+            return
 
 
     def editLevels(self, map_data: zs_tools.BYAML) -> None:
@@ -183,10 +217,16 @@ class Metro_Process(QThread):
         self.maps_to_add_special = {}
 
         for map in map_data.info:
+            if not self.thread_active:
+                break
+
             if map['UIID'].v > 83:
                 continue
 
-            new_map = self.map_names[self.stages[map['UIID'].v]]
+            if self.settings['Levels']:
+                new_map = self.map_names[self.stages[map['UIID'].v]]
+            else:
+                new_map = map['MapName']
             map['MapName'] = new_map
 
             # save myself credits when testing lol
@@ -236,6 +276,9 @@ class Metro_Process(QThread):
     def randomizeAesthetics(self, map_data) -> None:
         """Randomizes music and ink color depending on user settings"""
 
+        if not self.thread_active:
+            return
+
         musics = set()
         colors = set()
         backgrounds = set()
@@ -254,6 +297,8 @@ class Metro_Process(QThread):
         backgrounds = list(backgrounds)
         random.shuffle(backgrounds)
         for map in map_data.info:
+            if not self.thread_active:
+                break
             if self.settings['Music']:
                 map['BGMType'] = random.choice(musics)
             if self.settings['Ink Color']:
@@ -265,10 +310,16 @@ class Metro_Process(QThread):
     def editMapObjs(self) -> None:
         """Edits maps to add/remove stuff as necessary"""
 
+        if not self.thread_active:
+            return
+
         with open(self.base_path / 'Pack' / 'Map.pack', 'rb') as f:
             sarc_data = zs_tools.SARC(data=f.read(), compressed=False)
 
         for k,map in self.map_names.items():
+            if not self.thread_active:
+                break
+
             # read file & object list
             try:
                 map_sarc_name = f"Map/{map}.szs"
@@ -325,7 +376,7 @@ class Metro_Process(QThread):
         return obj
 
 
-    def writeFile(self, path: str, name: str, data: bytes):
+    def writeFile(self, path: str, name: str, data: bytes) -> None:
         """ Creates parent folders and writes the file
         
         Parameters
@@ -338,6 +389,8 @@ class Metro_Process(QThread):
             The raw data to write to the file
         """
 
+        if not self.thread_active:
+            return
         full_out_path = self.out_path / path
         full_out_path.mkdir(parents=True, exist_ok=True)
         with open(full_out_path / name, "wb") as f:
