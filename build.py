@@ -16,7 +16,7 @@ if platform.system() == "Darwin":
 if platform.system() == "Linux":
     platform_name = "linux"
 
-exe_path = Path(sys.argv[0]).parent.absolute() / 'dist' / base_name / str(base_name + exe_ext)
+exe_path = Path(sys.argv[0]).parent.absolute() / 'dist' / str(base_name + exe_ext)
 if not exe_path.is_file():
     raise Exception("Executable not found: %s" % exe_path)
 

@@ -42,13 +42,3 @@ app = BUNDLE(exe,
         "CFBundleName": "OE Randomizer",
         "CFBundleShortVersionString": "0.1.0"
     })
-
-coll = COLLECT(
-    exe,
-    a.binaries,
-    a.datas,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    name='Octo Expansion Randomizer',
-)
