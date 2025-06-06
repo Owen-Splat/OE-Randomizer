@@ -89,7 +89,7 @@ class Metro_Process(QThread):
         sarc_data.writer.files[info_file] = container.repack()
 
         # randomize music and ink color
-        if self.settings['Ink Color'] or self.settings['Music']:
+        if self.settings['Ink Color'] or self.settings['Music'] or self.settings['Backgrounds']:
             info_file = 'Mush/MapInfo.release.byml'
             map_data = zs_tools.BYAML(data=sarc_data.writer.files[info_file], compressed=False)
             self.randomizeAesthetics(map_data)
@@ -246,27 +246,33 @@ class Metro_Process(QThread):
                 map['SubC'] = '-'
                 continue
 
-            # 5% chance for a special per stage
-            if random.randint(0, 19) == random.choice(list(range(20))):
-                map['MainA'] = random.choice(('Jetpack', 'AquaBall'))
-                map['SubA'] = '-'
-                map['MainB'] = '-'
-                map['SubB'] = '-'
-                map['MainC'] = '-'
-                map['SubB'] = '-'
-                self.maps_to_add_special[new_map] = map['MainA']
-                continue
+            # # 5% chance for a special per stage - SOME LEVELS ARENT BEATABLE WITH BALLER/INKJET, OMIT FOR NOW
+            # if random.randint(0, 19) == random.choice(list(range(20))):
+            #     map['MainA'] = random.choice(('Jetpack', 'AquaBall'))
+            #     map['SubA'] = '-'
+            #     map['MainB'] = '-'
+            #     map['SubB'] = '-'
+            #     map['MainC'] = '-'
+            #     map['SubB'] = '-'
+            #     self.maps_to_add_special[new_map] = map['MainA']
+            #     continue
 
             # if not a special level, make the first weapon vanilla and randomize the next 2
             no_dups = list(weapons['Main_Weapons']).copy()
-            mainB = no_dups.pop(no_dups.index(random.choice(no_dups)))
-            mainC = no_dups.pop(no_dups.index(random.choice(no_dups)))
-            map['MainA'] = first_weapons[new_map]['Main']
-            map['MainB'] = mainB
-            map['MainC'] = mainC
-            map['SubA'] = first_weapons[new_map]['Sub']
+
+            if self.settings['First Weapon Vanilla']:
+                map['MainA'] = first_weapons[new_map]['Main']
+                map['SubA'] = first_weapons[new_map]['Sub']
+                no_dups.pop(map['MainA'])
+            else:
+                map['MainA'] = no_dups.pop(no_dups.index(random.choice(no_dups)))
+                map['SubA'] = random.choice(weapons['Sub_Weapons'])
+
+            map['MainB'] = no_dups.pop(no_dups.index(random.choice(no_dups)))
+            map['MainC'] = no_dups.pop(no_dups.index(random.choice(no_dups)))
             map['SubB'] = random.choice(weapons['Sub_Weapons'])
             map['SubC'] = random.choice(weapons['Sub_Weapons'])
+
             if map['RewardB'] == oead.S32(0):
                 map['RewardB'] = oead.S32(int(map['RewardA']) + 100)
             if map['RewardC'] == oead.S32(0):
