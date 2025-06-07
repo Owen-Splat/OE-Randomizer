@@ -1,6 +1,8 @@
 # OE-Randomizer
 A randomizer for the Octo Expansion DLC for Splatoon 2
 
+This mod is NOT online safe. Please use emummc, emulator, or an already banned console
+
 ## Information
 This randomizer includes options for randomizing weapons, levels (including the 4 thangs needed to progress to the final stages of the story), ink color, and music. An additional option exists for a One-Hit KO "Enemy Ink Is Lava" challenge
 
