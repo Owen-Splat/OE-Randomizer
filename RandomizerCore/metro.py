@@ -214,6 +214,22 @@ class Metro_Process(QThread):
                 if map['MapName'] in list(self.map_names.values()):
                     first_weapons[map['MapName']] = {'Main': map['MainA'], 'Sub': map['SubA']}
 
+            
+            with open(DATA_PATH / 'AquaBallStageList.yml', 'r') as f:
+                stages : dict = yaml.safe_load(f)
+            aquaBall_stages = {}
+            for i, (k,v) in enumerate(stages.items()):
+                for i2, id in enumerate(v):
+                    aquaBall_stages[id] = True
+
+            with open(DATA_PATH / 'JetpackStageList.yml', 'r') as f:
+                stages : dict = yaml.safe_load(f)
+            jetpack_stages = {}
+            for i, (k,v) in enumerate(stages.items()):
+                for i2, id in enumerate(v):
+                    jetpack_stages[id] = True
+            
+
         self.maps_to_add_special = {}
 
         for map in map_data.info:
@@ -221,6 +237,9 @@ class Metro_Process(QThread):
                 break
 
             if map['UIID'].v > 83:
+                continue
+
+            if not self.settings['Weapons']:
                 continue
 
             if self.settings['Levels']:
@@ -232,11 +251,8 @@ class Metro_Process(QThread):
             # save myself credits when testing lol
             map['Admission'] = oead.S32(0)
 
-            if not self.settings['Weapons']:
-                continue
-
-            # check if new level is an infinite special level
-            vspecial = first_weapons[new_map]['Main'] in ('Jetpack', 'AquaBall')
+            # check if new level is an infinite jetPack level
+            vspecial = first_weapons[new_map]['Main'] in ('Jetpack')
             if vspecial:
                 map['MainA'] = first_weapons[new_map]['Main']
                 map['SubA'] = '-'
@@ -246,16 +262,28 @@ class Metro_Process(QThread):
                 map['SubC'] = '-'
                 continue
 
-            # # 5% chance for a special per stage - SOME LEVELS ARENT BEATABLE WITH BALLER/INKJET, OMIT FOR NOW
-            # if random.randint(0, 19) == random.choice(list(range(20))):
-            #     map['MainA'] = random.choice(('Jetpack', 'AquaBall'))
-            #     map['SubA'] = '-'
-            #     map['MainB'] = '-'
-            #     map['SubB'] = '-'
-            #     map['MainC'] = '-'
-            #     map['SubB'] = '-'
-            #     self.maps_to_add_special[new_map] = map['MainA']
-            #     continue
+            # # 5% chance for a special per stage, AquaBall has priority over Jetpack
+            aquaBall_difficulty = aquaBall_stages.get(self.stages[map['UIID'].v], False)
+            if (aquaBall_difficulty and random.randint(0, 19) == random.choice(list(range(20)))):
+                 map['MainA'] = 'AquaBall'
+                 map['SubA'] = '-'
+                 map['MainB'] = '-'
+                 map['SubB'] = '-'
+                 map['MainC'] = '-'
+                 map['SubB'] = '-'
+                 self.maps_to_add_special[new_map] = map['MainA']
+                 continue
+            
+            jetPack_difficulty = jetpack_stages.get(self.stages[map['UIID'].v], False)
+            if (jetPack_difficulty and random.randint(0, 19) == random.choice(list(range(20)))):
+                 map['MainA'] = 'Jetpack'
+                 map['SubA'] = '-'
+                 map['MainB'] = '-'
+                 map['SubB'] = '-'
+                 map['MainC'] = '-'
+                 map['SubB'] = '-'
+                 self.maps_to_add_special[new_map] = map['MainA']
+                 continue
 
             # if not a special level, make the first weapon vanilla and randomize the next 2
             no_dups = list(weapons['Main_Weapons']).copy()
