@@ -1,5 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+with open("./version.txt") as f:
+    randomizer_version = f.read().strip()
 
 a = Analysis(
     ['randomizer.py'],
@@ -40,5 +42,5 @@ app = BUNDLE(exe,
         "LSBackgroundOnly": False,
         "CFBundleDisplayName": "Octo Expansion Randomizer",
         "CFBundleName": "OE Randomizer",
-        "CFBundleShortVersionString": "0.1.0"
+        "CFBundleShortVersionString": randomizer_version
     })
