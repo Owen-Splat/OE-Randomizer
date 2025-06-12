@@ -326,6 +326,10 @@ class Metro_Process(QThread):
             if not self.thread_active:
                 break
 
+            # if we don't need to add OHKO challenge or modify the level in any way, just skip over it
+            if not (self.settings['Enemy Ink Is Lava'] or map in self.maps_to_add_special):
+                continue
+
             # read file & object list
             try:
                 map_sarc_name = f"Map/{map}.szs"
