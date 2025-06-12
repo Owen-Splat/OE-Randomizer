@@ -1,8 +1,8 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QMainWindow, QLabel, QLineEdit, QPushButton, QGroupBox, QProgressBar,
-    QCheckBox, QComboBox, QSpacerItem, QHBoxLayout, QVBoxLayout, QWidget, QFileDialog, QSizePolicy)
+    QCheckBox, QComboBox, QSpacerItem, QHBoxLayout, QVBoxLayout, QWidget, QFileDialog, QSizePolicy, QMessageBox, QScrollArea)
 from RandomizerCore.metro import Metro_Process
-from randomizer_paths import SETTINGS_PATH, LOGS_PATH
+from randomizer_paths import SETTINGS_PATH, RESOURCE_PATH, LOGS_PATH
 from version import VERSION
 from pathlib import Path
 import random, string, yaml
@@ -16,6 +16,7 @@ class RandomizerWindow(QMainWindow):
         self.loadSettings()
         self.toggleAllDisable()
         self.show()
+        self.showChangelog()
 
 
     def browseButtonClicked(self, line) -> None:
@@ -173,6 +174,17 @@ class RandomizerWindow(QMainWindow):
     def closeEvent(self, event) -> None:
         self.saveSettings()
         return super().closeEvent(event)
+
+
+    def showChangelog(self) -> None:
+        if SETTINGS_PATH.exists():
+            return
+
+        with open(RESOURCE_PATH / "changelog.txt", 'r') as f:
+            changes = f.read()
+
+        box = ChangeLogWindow(changes)
+        box.exec()
 
 
 
@@ -391,3 +403,18 @@ class Ui_WorkWindow(object):
         widget = QWidget(window)
         widget.setLayout(vl)
         window.setCentralWidget(widget)
+
+
+
+class ChangeLogWindow(QMessageBox):
+    def __init__(self, changes: str) -> None:
+        super(ChangeLogWindow, self).__init__()
+        self.setWindowTitle("Octo Expansion Randomizer - Changelog")
+        scroll = QScrollArea(self)
+        scroll.setWidgetResizable(True)
+        self.content = QWidget()
+        scroll.setWidget(self.content)
+        vl = QVBoxLayout(self.content)
+        vl.addWidget(QLabel(changes, self))
+        self.layout().addWidget(scroll, 0, 0, 1, 1)
+        self.setStyleSheet("QScrollArea{min-width:400 px; min-height: 300px}")
