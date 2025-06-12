@@ -118,7 +118,7 @@ class RandomizerWindow(QMainWindow):
             thangs_box.setDisabled(True)
 
 
-    def getSettings(self, for_save=False) -> dict:
+    def getSettings(self) -> dict:
         settings = {}
         settings['Base_RomFS_Path'] = self.ui.base_line.text()
         # settings['DLC_Path'] = self.ui.dlc_line.text()
@@ -126,13 +126,9 @@ class RandomizerWindow(QMainWindow):
         settings['Seed'] = self.ui.seed_line.text()
         for check in self.findChildren(QCheckBox):
             check: QCheckBox
-            if not check.isEnabled() and not for_save:
-                continue
             settings[check.text()] = check.isChecked()
         for box in self.findChildren(QComboBox):
             box: QComboBox
-            if not box.isEnabled() and not for_save:
-                continue
             setting_name = box.currentText().split(':')[0]
             choice = box.currentText().split(':')[1].strip()
             settings[setting_name] = choice
@@ -140,7 +136,7 @@ class RandomizerWindow(QMainWindow):
 
 
     def saveSettings(self) -> None:
-        settings = self.getSettings(for_save=True)
+        settings = self.getSettings()
         with open(SETTINGS_PATH, 'w') as f:
             yaml.dump(settings, f, sort_keys=False)
 
