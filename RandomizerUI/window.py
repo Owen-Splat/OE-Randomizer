@@ -13,6 +13,7 @@ class RandomizerWindow(QMainWindow):
         self.ui = Ui_RandomizerWindow()
         self.ui.setupUi(self)
         self.loadSettings()
+        self.toggleAllDisable()
         self.show()
 
 
@@ -102,7 +103,22 @@ class RandomizerWindow(QMainWindow):
         return False
 
 
-    def getSettings(self) -> dict:
+    def toggleDisable(self, disabled: bool, option_to_disable) -> None:
+        option_to_disable.setDisabled(disabled)
+
+
+    def toggleAllDisable(self) -> None:
+        weapons_check: QCheckBox = [c for c in self.findChildren(QCheckBox) if c.text() == "Weapons"][0]
+        vanilla_check: QCheckBox = [c for c in self.findChildren(QCheckBox) if c.text() == "First Weapon Vanilla"][0]
+        if not weapons_check.isChecked():
+            vanilla_check.setDisabled(True)
+        levels_check: QCheckBox = [c for c in self.findChildren(QCheckBox) if c.text() == "Levels"][0]
+        thangs_box: QComboBox = [c for c in self.findChildren(QComboBox) if c.currentText().startswith("Thangs:")][0]
+        if not levels_check.isChecked():
+            thangs_box.setDisabled(True)
+
+
+    def getSettings(self, for_save=False) -> dict:
         settings = {}
         settings['Base_RomFS_Path'] = self.ui.base_line.text()
         # settings['DLC_Path'] = self.ui.dlc_line.text()
@@ -110,9 +126,13 @@ class RandomizerWindow(QMainWindow):
         settings['Seed'] = self.ui.seed_line.text()
         for check in self.findChildren(QCheckBox):
             check: QCheckBox
+            if not check.isEnabled() and not for_save:
+                continue
             settings[check.text()] = check.isChecked()
         for box in self.findChildren(QComboBox):
             box: QComboBox
+            if not box.isEnabled() and not for_save:
+                continue
             setting_name = box.currentText().split(':')[0]
             choice = box.currentText().split(':')[1].strip()
             settings[setting_name] = choice
@@ -120,7 +140,7 @@ class RandomizerWindow(QMainWindow):
 
 
     def saveSettings(self) -> None:
-        settings = self.getSettings()
+        settings = self.getSettings(for_save=True)
         with open(SETTINGS_PATH, 'w') as f:
             yaml.dump(settings, f, sort_keys=False)
 
@@ -141,7 +161,7 @@ class RandomizerWindow(QMainWindow):
             self.ui.seed_line.setText(settings['Seed'])
         for check in self.findChildren(QCheckBox):
             check: QCheckBox
-            if check.text() in settings:
+            if check.text() in settings and check.isEnabled():
                 check.setChecked(settings[check.text()])
         for box in self.findChildren(QComboBox):
             box: QComboBox
@@ -229,8 +249,14 @@ class Ui_RandomizerWindow(object):
         lava_check = QCheckBox("Enemy Ink Is Lava", group)
         cutscenes_check = QCheckBox("Skip Cutscenes", group)
         cutscenes_check.setDisabled(True)
+        ft = cutscenes_check.font()
+        ft.setStrikeOut(True)
+        cutscenes_check.setFont(ft)
         background_check = QCheckBox("Backgrounds", group)
         background_check.setDisabled(True)
+        ft = background_check.font()
+        ft.setStrikeOut(True)
+        background_check.setFont(ft)
         color_check = QCheckBox("Ink Color", group)
         music_check = QCheckBox("Music", group)
         hl = QHBoxLayout()
@@ -287,6 +313,10 @@ class Ui_RandomizerWindow(object):
             box.setFixedWidth(150)
         for check in window.findChildren(QCheckBox):
             check.setFixedWidth(150)
+
+        # signals for settings compatibility (other settings will be disabled if another is not checked)
+        weapon_check.clicked.connect(lambda: window.toggleDisable(not weapon_check.isChecked(), beatable_check))
+        level_check.clicked.connect(lambda: window.toggleDisable(not level_check.isChecked(), thang_box))
 
 
     def createHorizontalSpacer(self) -> QSpacerItem:
