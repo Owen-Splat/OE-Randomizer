@@ -287,21 +287,21 @@ class Metro_Process(QThread):
 
         musics = set()
         colors = set()
-        backgrounds = set()
+        # backgrounds = set()
         for map in map_data.info:
             if 'BGMType' in map and str(map['MapFileName']).endswith('Msn') and self.settings['Music']:
                 musics.add(map['BGMType'])
             if 'FixTeamColor' in map and self.settings['Ink Color']:
                 colors.add(map['FixTeamColor'])
-            if 'SndSceneEnv' in map and self.settings['Backgrounds']:
-                backgrounds.add(map['SndSceneEnv'])
+            # if 'SndSceneEnv' in map and self.settings['Backgrounds']:
+            #     backgrounds.add(map['SndSceneEnv'])
 
         musics = list(musics)
         random.shuffle(musics)
         colors = list(colors)
         random.shuffle(colors)
-        backgrounds = list(backgrounds)
-        random.shuffle(backgrounds)
+        # backgrounds = list(backgrounds)
+        # random.shuffle(backgrounds)
         for map in map_data.info:
             if not self.thread_active:
                 break
@@ -309,8 +309,8 @@ class Metro_Process(QThread):
                 map['BGMType'] = random.choice(musics)
             if self.settings['Ink Color']:
                 map['FixTeamColor'] = random.choice(colors)
-            if self.settings['Backgrounds']:
-                map['SndSceneEnv'] = random.choice(backgrounds)
+            # if self.settings['Backgrounds']:
+            #     map['SndSceneEnv'] = random.choice(backgrounds)
 
 
     def editMapObjs(self) -> None:
