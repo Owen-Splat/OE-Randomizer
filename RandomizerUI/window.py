@@ -1,4 +1,5 @@
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QCursor, QPixmap
 from PySide6.QtWidgets import (QMainWindow, QLabel, QLineEdit, QPushButton, QGroupBox, QProgressBar,
     QCheckBox, QComboBox, QSpacerItem, QHBoxLayout, QVBoxLayout, QWidget, QFileDialog, QSizePolicy, QMessageBox, QScrollArea)
 from RandomizerCore.metro import Metro_Process
@@ -191,6 +192,10 @@ class RandomizerWindow(QMainWindow):
 class Ui_RandomizerWindow(object):
     def setupUi(self, window: QMainWindow) -> None:
         window.setWindowTitle(f"Octo Expansion Randomizer v{VERSION}")
+        cursor_pixmap = QPixmap(RESOURCE_PATH / "cursor.png")
+        cursor_pixmap = cursor_pixmap.scaled(32, 32, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+        window.setCursor(cursor_pixmap)
+
         widget = QWidget()
         vl = QVBoxLayout()
 
