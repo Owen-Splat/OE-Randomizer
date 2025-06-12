@@ -3,6 +3,7 @@ from PySide6.QtWidgets import (QMainWindow, QLabel, QLineEdit, QPushButton, QGro
     QCheckBox, QComboBox, QSpacerItem, QHBoxLayout, QVBoxLayout, QWidget, QFileDialog, QSizePolicy)
 from RandomizerCore.metro import Metro_Process
 from randomizer_paths import SETTINGS_PATH, LOGS_PATH
+from version import VERSION
 from pathlib import Path
 import random, string, yaml
 
@@ -177,7 +178,7 @@ class RandomizerWindow(QMainWindow):
 
 class Ui_RandomizerWindow(object):
     def setupUi(self, window: QMainWindow) -> None:
-        window.setWindowTitle("Octo Expansion Randomizer v0.1.0")
+        window.setWindowTitle(f"Octo Expansion Randomizer v{VERSION}")
         widget = QWidget()
         vl = QVBoxLayout()
 

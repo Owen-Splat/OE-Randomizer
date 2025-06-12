@@ -9,7 +9,8 @@ a = Analysis(
     binaries=[],
     datas=[
         ('RandomizerCore/Data/StageList.yml', 'RandomizerCore/Data'),
-        ('RandomizerCore/Data/Weapons.yml', 'RandomizerCore/Data')
+        ('RandomizerCore/Data/Weapons.yml', 'RandomizerCore/Data'),
+        ('version.txt', '.')
     ],
     hiddenimports=[],
     hookspath=[],
