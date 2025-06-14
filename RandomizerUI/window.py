@@ -6,7 +6,7 @@ from RandomizerCore.metro import Metro_Process
 from randomizer_paths import SETTINGS_PATH, RESOURCE_PATH, LOGS_PATH
 from version import VERSION
 from pathlib import Path
-import random, string, yaml
+import os, platform, random, string, subprocess, yaml
 
 
 class RandomizerWindow(QMainWindow):
@@ -340,6 +340,7 @@ class WorkWindow(QMainWindow):
         self.ui.setupUi(self)
         self.setWindowTitle(settings['Seed'])
         self.settings = settings
+        self.out_dir = settings['Output_Path']
         self.done = False
         self.error = False
         self.cancel = False
@@ -361,7 +362,7 @@ class WorkWindow(QMainWindow):
             f.write(f'\n\n{self.settings}')
 
 
-    def workDone(self):
+    def workDone(self) -> None:
         if self.error:
             self.ui.label.setText("Something went wrong! Please report this to GitHub!")
             self.ui.progress.setVisible(False)
@@ -375,11 +376,12 @@ class WorkWindow(QMainWindow):
         
         self.ui.label.setText("All done! Check the README for instructions on how to play!")
         self.ui.progress.setVisible(False)
+        self.ui.button.setVisible(True)
         self.done = True
 
 
     # override the window close event to close the randomization thread
-    def closeEvent(self, event):
+    def closeEvent(self, event) -> None:
         if self.done:
             event.accept()
         else:
@@ -387,6 +389,17 @@ class WorkWindow(QMainWindow):
             self.cancel = True
             self.ui.label.setText('Canceling...')
             self.work_thread.stop()
+
+
+    def onButtonClicked(self) -> None:
+        out_path = Path(self.out_dir).absolute()
+        if platform.system() == "Windows":
+            os.startfile(out_path)
+        elif platform.system() == "Darwin":
+            subprocess.Popen(["open", out_path])
+        else:
+            subprocess.Popen(["xdg-open", out_path])
+        self.close()
 
 
 
@@ -399,6 +412,10 @@ class Ui_WorkWindow(object):
         vl = QVBoxLayout()
         vl.addWidget(self.label)
         vl.addWidget(self.progress)
+        self.button = QPushButton("Open Folder", window)
+        vl.addWidget(self.button)
+        self.button.setVisible(False)
+        self.button.clicked.connect(window.onButtonClicked)
         window.setMinimumSize(448, 112)
         widget = QWidget(window)
         widget.setLayout(vl)
