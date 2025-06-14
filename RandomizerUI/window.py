@@ -1,9 +1,9 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import (QMainWindow, QLabel, QLineEdit, QPushButton, QGroupBox, QProgressBar, QFrame,
+from PySide6.QtWidgets import (QMainWindow, QLabel, QLineEdit, QPushButton, QGroupBox, QProgressBar, QFrame, QTextBrowser,
     QCheckBox, QComboBox, QSpacerItem, QHBoxLayout, QVBoxLayout, QWidget, QFileDialog, QSizePolicy, QMessageBox, QScrollArea)
 from RandomizerCore.metro import Metro_Process
-from randomizer_paths import SETTINGS_PATH, RESOURCE_PATH, LOGS_PATH
+from randomizer_paths import RESOURCE_PATH, ROOT_PATH, RUNNING_FROM_SOURCE
 from version import VERSION
 from pathlib import Path
 import os, platform, random, string, subprocess, yaml
@@ -18,7 +18,8 @@ class RandomizerWindow(QMainWindow):
         self.toggleAllDisable()
         self.show()
         self.validatePaths()
-        self.showChangelog()
+        if not Path(ROOT_PATH / 'settings.txt').exists():
+            self.showChangelog()
 
 
     def browseButtonClicked(self, line) -> None:
@@ -133,14 +134,14 @@ class RandomizerWindow(QMainWindow):
 
     def saveSettings(self) -> None:
         settings = self.getSettings()
-        with open(SETTINGS_PATH, 'w') as f:
+        with open(ROOT_PATH / 'settings.txt', 'w') as f:
             yaml.dump(settings, f, sort_keys=False)
 
 
     def loadSettings(self) -> None:
-        if not SETTINGS_PATH.exists():
+        if not Path(ROOT_PATH / 'settings.txt').exists():
             return
-        with open(SETTINGS_PATH, 'r') as f:
+        with open(ROOT_PATH / 'settings.txt', 'r') as f:
             settings = yaml.safe_load(f)
 
         if 'Base_RomFS_Path' in settings:
@@ -170,15 +171,23 @@ class RandomizerWindow(QMainWindow):
         return super().closeEvent(event)
 
 
-    def showChangelog(self) -> None:
-        if SETTINGS_PATH.exists():
-            return
+    def showAbout(self) -> None:
+        with open(RESOURCE_PATH / "about.txt", 'r') as f:
+            about = f.read()
+        HelpWindow(title="About", text=about)
 
+
+    def showChangelog(self) -> None:
         with open(RESOURCE_PATH / "changelog.txt", 'r') as f:
             changes = f.read()
+        HelpWindow(title="Changelog", text=changes, with_scroll=True)
 
-        box = ChangeLogWindow(changes)
-        box.exec()
+
+    def showReadme(self) -> None:
+        ext = "md" if RUNNING_FROM_SOURCE else "txt"
+        with open(ROOT_PATH / f"README.{ext}", 'r') as f:
+            readme = f.read()
+        HelpWindow(title="README", text=readme, with_scroll=True, markdown=True)
 
 
 
@@ -327,6 +336,15 @@ class Ui_RandomizerWindow(object):
         weapon_check.clicked.connect(lambda: window.toggleDisable(not weapon_check.isChecked(), beatable_check))
         level_check.clicked.connect(lambda: window.toggleDisable(not level_check.isChecked(), thang_box))
 
+        # setup menu bar
+        help_menu = window.menuBar().addMenu("Help")
+        about_act = help_menu.addAction("About")
+        about_act.triggered.connect(window.showAbout)
+        change_act = help_menu.addAction("Changelog")
+        change_act.triggered.connect(window.showChangelog)
+        read_act = help_menu.addAction("README")
+        read_act.triggered.connect(window.showReadme)
+
 
     def createHorizontalSpacer(self) -> QSpacerItem:
         return QSpacerItem(1, 1, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -356,7 +374,7 @@ class WorkWindow(QMainWindow):
 
     def workError(self, er_message: str) -> None:
         self.error = True
-        with open(LOGS_PATH, 'w') as f:
+        with open(ROOT_PATH / 'log.txt', 'w') as f:
             f.write(f"{self.windowTitle()}")
             f.write(f'\n\n{er_message}')
             f.write(f'\n\n{self.settings}')
@@ -423,18 +441,27 @@ class Ui_WorkWindow(object):
 
 
 
-class ChangeLogWindow(QMessageBox):
-    def __init__(self, changes: str) -> None:
-        super(ChangeLogWindow, self).__init__()
-        self.setWindowTitle("Octo Expansion Randomizer - Changelog")
-        scroll = QScrollArea(self)
-        scroll.setWidgetResizable(True)
+class HelpWindow(QMessageBox):
+    def __init__(self, title: str, text: str, with_scroll: bool = False, markdown: bool = False) -> None:
+        super(HelpWindow, self).__init__()
+        self.setWindowTitle(f"Octo Expansion Randomizer - {title}")
         self.content = QWidget()
-        scroll.setWidget(self.content)
         vl = QVBoxLayout(self.content)
-        vl.addWidget(QLabel(changes, self))
-        self.layout().addWidget(scroll, 0, 0, 1, 1)
-        self.setStyleSheet("QScrollArea{min-width:400 px; min-height: 300px}")
+        if with_scroll:
+            if markdown:
+                browser = QTextBrowser(self)
+                browser.setMarkdown(text)
+                vl.addWidget(browser)
+            else:
+                vl.addWidget(QLabel(text, self))
+            scroll = QScrollArea(self)
+            scroll.setWidgetResizable(True)
+            scroll.setWidget(self.content)
+            self.layout().addWidget(scroll, 0, 0, 1, 1)
+            self.setStyleSheet("QScrollArea{min-width:400 px; min-height: 300px}")
+        else:
+            self.setText(text)
+        self.exec()
 
 
 
