@@ -1,6 +1,6 @@
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QCursor, QPixmap
-from PySide6.QtWidgets import (QMainWindow, QLabel, QLineEdit, QPushButton, QGroupBox, QProgressBar,
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import (QMainWindow, QLabel, QLineEdit, QPushButton, QGroupBox, QProgressBar, QFrame,
     QCheckBox, QComboBox, QSpacerItem, QHBoxLayout, QVBoxLayout, QWidget, QFileDialog, QSizePolicy, QMessageBox, QScrollArea)
 from RandomizerCore.metro import Metro_Process
 from randomizer_paths import SETTINGS_PATH, RESOURCE_PATH, LOGS_PATH
@@ -116,7 +116,7 @@ class RandomizerWindow(QMainWindow):
         if not weapons_check.isChecked():
             vanilla_check.setDisabled(True)
         levels_check: QCheckBox = [c for c in self.findChildren(QCheckBox) if c.text() == "Levels"][0]
-        thangs_box: QComboBox = [c for c in self.findChildren(QComboBox) if c.currentText().startswith("Thangs:")][0]
+        thangs_box: RandomizerComboBox = [c for c in self.findChildren(RandomizerComboBox) if c.currentText().startswith("Thangs:")][0]
         if not levels_check.isChecked():
             thangs_box.setDisabled(True)
 
@@ -130,8 +130,8 @@ class RandomizerWindow(QMainWindow):
         for check in self.findChildren(QCheckBox):
             check: QCheckBox
             settings[check.text()] = check.isChecked()
-        for box in self.findChildren(QComboBox):
-            box: QComboBox
+        for box in self.findChildren(RandomizerComboBox):
+            box: RandomizerComboBox
             setting_name = box.currentText().split(':')[0]
             choice = box.currentText().split(':')[1].strip()
             settings[setting_name] = choice
@@ -162,8 +162,8 @@ class RandomizerWindow(QMainWindow):
             check: QCheckBox
             if check.text() in settings and check.isEnabled():
                 check.setChecked(settings[check.text()])
-        for box in self.findChildren(QComboBox):
-            box: QComboBox
+        for box in self.findChildren(RandomizerComboBox):
+            box: RandomizerComboBox
             setting_name = box.currentText().split(':')[0]
             if setting_name in settings:
                 index = box.findText(f"{setting_name}:  {settings[setting_name]}")
@@ -253,7 +253,7 @@ class Ui_RandomizerWindow(object):
         group.setStyleSheet("QGroupBox {font-size: 12px; font-weight: bold;}")
         weapon_check = QCheckBox("Weapons", group)
         level_check = QCheckBox("Levels", group)
-        thang_box = QComboBox(group)
+        thang_box = RandomizerComboBox(group)
         thang_box.addItems((
             "Thangs:  Vanilla",
             "Thangs:  Restricted",
@@ -298,17 +298,19 @@ class Ui_RandomizerWindow(object):
         group.setLayout(ovl)
         vl.addWidget(group)
 
-        region_box = QComboBox(widget)
+        region_box = RandomizerComboBox(widget)
         region_box.addItems((
             "Region:  EU",
             "Region:  JP",
             "Region:  US"
         ))
-        platform_box = QComboBox(widget)
+        region_box.upwards = True
+        platform_box = RandomizerComboBox(widget)
         platform_box.addItems((
             "Platform:  Console",
             "Platform:  Emulator"
         ))
+        platform_box.upwards = True
         button = QPushButton("RANDOMIZE", widget)
         button.setFixedWidth(button.width() * 3 // 2) # floored multiplier of 1.5
         button.clicked.connect(window.randomize)
@@ -323,7 +325,7 @@ class Ui_RandomizerWindow(object):
         window.setCentralWidget(widget)
 
         # make settings all a consistent size
-        for box in window.findChildren(QComboBox):
+        for box in window.findChildren(RandomizerComboBox):
             box.setFixedWidth(150)
         for check in window.findChildren(QCheckBox):
             check.setFixedWidth(150)
@@ -423,3 +425,25 @@ class ChangeLogWindow(QMessageBox):
         vl.addWidget(QLabel(changes, self))
         self.layout().addWidget(scroll, 0, 0, 1, 1)
         self.setStyleSheet("QScrollArea{min-width:400 px; min-height: 300px}")
+
+
+
+class RandomizerComboBox(QComboBox):
+    upwards: bool = False
+
+
+    def __init__(self, parent) -> None:
+        super(RandomizerComboBox, self).__init__()
+        self.setParent(parent)
+
+
+    def showPopup(self) -> None:
+        """Custom popup implementation to move it fully below or above the combobox"""
+
+        QComboBox.showPopup(self)
+        popup: QWidget = self.findChild(QFrame)
+        pos_x = popup.x()
+        pos_y = popup.y() + (self.height() * (self.currentIndex() + 1))
+        if self.upwards:
+            pos_y -= (self.height() + popup.height())
+        popup.move(pos_x, pos_y)
