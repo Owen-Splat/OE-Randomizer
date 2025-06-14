@@ -34,10 +34,12 @@ exe = EXE(
     upx=True,
     runtime_tmpdir=None,
     console=False,
+    icon="RandomizerUI/Resources/icon.ico"
 )
 
 app = BUNDLE(exe,
     name='Octo Expansion Randomizer.app',
+    icon="RandomizerUI/Resources/icon.icns"
     bundle_identifier=None,
     info_plist={
         "LSBackgroundOnly": False,
