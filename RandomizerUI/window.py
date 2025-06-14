@@ -17,6 +17,7 @@ class RandomizerWindow(QMainWindow):
         self.loadSettings()
         self.toggleAllDisable()
         self.show()
+        self.validatePaths()
         self.showChangelog()
 
 
@@ -27,6 +28,7 @@ class RandomizerWindow(QMainWindow):
         if dir == '': # dont override any existing path if the user canceled the QFileDialog
             return
         line.setText(str(Path(dir)))
+        self.validatePaths()
 
 
     def createSeed(self, write_line=False) -> str:
@@ -77,31 +79,22 @@ class RandomizerWindow(QMainWindow):
         # dlc_valid = Path(dlc_path / "Layout" / "OctBackBtn_00.Nin_NX_NVN.szs").is_file()
 
         out_path = Path(self.ui.out_line.text())
-        output_valid = out_path.exists()
+        output_valid = out_path.exists() and self.ui.out_line.text().replace(" ", "") not in ["", ".", "\\"]
 
-        self.ui.base_line.setStyleSheet('')
-        # self.ui.dlc_line.setStyleSheet('')
-        self.ui.out_line.setStyleSheet('')
+        self.ui.base_line.setStyleSheet('background-color: green;')
+        # self.ui.dlc_line.setStyleSheet('background-color: green;')
+        self.ui.out_line.setStyleSheet('background-color: green;')
         if all((romfs_valid, output_valid)):
             return True
 
-        red = "background-color: red;"
-        green = "background-color: green;"
-
         if not romfs_valid:
-            self.ui.base_line.setStyleSheet(red)
-        else:
-            self.ui.base_line.setStyleSheet(green)
+            self.ui.base_line.setStyleSheet("background-color: red;")
 
         # if not dlc_valid:
-        #     self.ui.dlc_line.setStyleSheet(red)
-        # else:
-        #     self.ui.dlc_line.setStyleSheet(green)
+        #     self.ui.dlc_line.setStyleSheet("background-color: red;")
 
         if not output_valid:
-            self.ui.out_line.setStyleSheet(red)
-        else:
-            self.ui.out_line.setStyleSheet(green)
+            self.ui.out_line.setStyleSheet("background-color: red;")
 
         return False
 

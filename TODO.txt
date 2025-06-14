@@ -5,4 +5,3 @@
 - failing damageless in tower/rainmaker levels results in a softlock
 - skippable cutscenes
 - cannot only randomize levels (main branch issue, double check dev branch)
-- path apparently might not go off red if reselected (main branch issue, double check dev branch)
