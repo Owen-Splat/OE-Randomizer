@@ -1,8 +1,7 @@
 - randomize backgrounds
 - randomize music (incompatible music results in no music playing, needs more testing)
 - memcakes
-- disable Thangs option when Levels is not checked
-- add proper logic
+- add proper logic, difficulty settings as well
 - failing damageless in tower/rainmaker levels results in a softlock
 - skippable cutscenes
 - cannot only randomize levels (main branch issue, double check dev branch)

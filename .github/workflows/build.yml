@@ -1,5 +1,7 @@
 on:
   pull_request:
+    branches:
+      - main
     types:
       - closed
 
@@ -25,5 +27,5 @@ jobs:
       - run: python build.py
       - uses: actions/upload-artifact@v4
         with:
-          name: Octo Expansion Randomizer-0.1.0-${{ matrix.os }}
-          path: dist/release_archive_0.1.0
+          name: Octo Expansion Randomizer-${{ matrix.os }}
+          path: dist/release_archive

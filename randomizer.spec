@@ -1,5 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+with open("./version.txt") as f:
+    randomizer_version = f.read().strip()
 
 a = Analysis(
     ['randomizer.py'],
@@ -9,7 +11,8 @@ a = Analysis(
         ('RandomizerCore/Data/AquaBallStageList.yml', 'RandomizerCore/Data'),
         ('RandomizerCore/Data/JetpackStageList.yml', 'RandomizerCore/Data'),
         ('RandomizerCore/Data/StageList.yml', 'RandomizerCore/Data'),
-        ('RandomizerCore/Data/Weapons.yml', 'RandomizerCore/Data')
+        ('RandomizerCore/Data/Weapons.yml', 'RandomizerCore/Data'),
+        ('version.txt', '.')
     ],
     hiddenimports=[],
     hookspath=[],
@@ -33,14 +36,16 @@ exe = EXE(
     upx=True,
     runtime_tmpdir=None,
     console=False,
+    icon="RandomizerUI/Resources/icon.ico"
 )
 
 app = BUNDLE(exe,
     name='Octo Expansion Randomizer.app',
+    icon="RandomizerUI/Resources/icon.icns"
     bundle_identifier=None,
     info_plist={
         "LSBackgroundOnly": False,
         "CFBundleDisplayName": "Octo Expansion Randomizer",
         "CFBundleName": "OE Randomizer",
-        "CFBundleShortVersionString": "0.1.0"
+        "CFBundleShortVersionString": randomizer_version
     })

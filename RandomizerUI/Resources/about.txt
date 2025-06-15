@@ -1,0 +1,8 @@
+<html>
+Created by Owen_Splat
+<br></br><br></br>
+
+Report issues here:
+<br></br>
+<a href="https://github.com/Owen-Splat/OE-Randomizer/issues" style="color: rgb(31, 81, 255);">https://github.com/Owen-Splat/OE-Randomizer/issues</a>
+</html>

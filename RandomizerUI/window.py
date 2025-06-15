@@ -1,10 +1,12 @@
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (QMainWindow, QLabel, QLineEdit, QPushButton, QGroupBox, QProgressBar,
-    QCheckBox, QComboBox, QSpacerItem, QHBoxLayout, QVBoxLayout, QWidget, QFileDialog, QSizePolicy)
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import (QMainWindow, QLabel, QLineEdit, QPushButton, QGroupBox, QProgressBar, QFrame, QTextBrowser,
+    QCheckBox, QComboBox, QSpacerItem, QHBoxLayout, QVBoxLayout, QWidget, QFileDialog, QSizePolicy, QMessageBox, QScrollArea)
 from RandomizerCore.metro import Metro_Process
-from randomizer_paths import SETTINGS_PATH, LOGS_PATH
+from randomizer_paths import RESOURCE_PATH, ROOT_PATH, RUNNING_FROM_SOURCE
+from version import VERSION
 from pathlib import Path
-import random, string, yaml
+import os, platform, random, string, subprocess, yaml
 
 
 class RandomizerWindow(QMainWindow):
@@ -13,7 +15,11 @@ class RandomizerWindow(QMainWindow):
         self.ui = Ui_RandomizerWindow()
         self.ui.setupUi(self)
         self.loadSettings()
+        self.toggleAllDisable()
         self.show()
+        self.validatePaths()
+        if not Path(ROOT_PATH / 'settings.txt').exists():
+            self.showChangelog()
 
 
     def browseButtonClicked(self, line) -> None:
@@ -23,6 +29,7 @@ class RandomizerWindow(QMainWindow):
         if dir == '': # dont override any existing path if the user canceled the QFileDialog
             return
         line.setText(str(Path(dir)))
+        self.validatePaths()
 
 
     def createSeed(self, write_line=False) -> str:
@@ -73,33 +80,39 @@ class RandomizerWindow(QMainWindow):
         # dlc_valid = Path(dlc_path / "Layout" / "OctBackBtn_00.Nin_NX_NVN.szs").is_file()
 
         out_path = Path(self.ui.out_line.text())
-        output_valid = out_path.exists()
+        output_valid = out_path.exists() and self.ui.out_line.text().replace(" ", "") not in ["", ".", "\\"]
 
-        self.ui.base_line.setStyleSheet('')
-        # self.ui.dlc_line.setStyleSheet('')
-        self.ui.out_line.setStyleSheet('')
+        self.ui.base_line.setStyleSheet('background-color: green;')
+        # self.ui.dlc_line.setStyleSheet('background-color: green;')
+        self.ui.out_line.setStyleSheet('background-color: green;')
         if all((romfs_valid, output_valid)):
             return True
 
-        red = "background-color: red;"
-        green = "background-color: green;"
-
         if not romfs_valid:
-            self.ui.base_line.setStyleSheet(red)
-        else:
-            self.ui.base_line.setStyleSheet(green)
+            self.ui.base_line.setStyleSheet("background-color: red;")
 
         # if not dlc_valid:
-        #     self.ui.dlc_line.setStyleSheet(red)
-        # else:
-        #     self.ui.dlc_line.setStyleSheet(green)
+        #     self.ui.dlc_line.setStyleSheet("background-color: red;")
 
         if not output_valid:
-            self.ui.out_line.setStyleSheet(red)
-        else:
-            self.ui.out_line.setStyleSheet(green)
+            self.ui.out_line.setStyleSheet("background-color: red;")
 
         return False
+
+
+    def toggleDisable(self, disabled: bool, option_to_disable) -> None:
+        option_to_disable.setDisabled(disabled)
+
+
+    def toggleAllDisable(self) -> None:
+        weapons_check: QCheckBox = [c for c in self.findChildren(QCheckBox) if c.text() == "Weapons"][0]
+        vanilla_check: QCheckBox = [c for c in self.findChildren(QCheckBox) if c.text() == "First Weapon Vanilla"][0]
+        if not weapons_check.isChecked():
+            vanilla_check.setDisabled(True)
+        levels_check: QCheckBox = [c for c in self.findChildren(QCheckBox) if c.text() == "Levels"][0]
+        thangs_box: RandomizerComboBox = [c for c in self.findChildren(RandomizerComboBox) if c.currentText().startswith("Thangs:")][0]
+        if not levels_check.isChecked():
+            thangs_box.setDisabled(True)
 
 
     def getSettings(self) -> dict:
@@ -111,8 +124,8 @@ class RandomizerWindow(QMainWindow):
         for check in self.findChildren(QCheckBox):
             check: QCheckBox
             settings[check.text()] = check.isChecked()
-        for box in self.findChildren(QComboBox):
-            box: QComboBox
+        for box in self.findChildren(RandomizerComboBox):
+            box: RandomizerComboBox
             setting_name = box.currentText().split(':')[0]
             choice = box.currentText().split(':')[1].strip()
             settings[setting_name] = choice
@@ -121,14 +134,14 @@ class RandomizerWindow(QMainWindow):
 
     def saveSettings(self) -> None:
         settings = self.getSettings()
-        with open(SETTINGS_PATH, 'w') as f:
+        with open(ROOT_PATH / 'settings.txt', 'w') as f:
             yaml.dump(settings, f, sort_keys=False)
 
 
     def loadSettings(self) -> None:
-        if not SETTINGS_PATH.exists():
+        if not Path(ROOT_PATH / 'settings.txt').exists():
             return
-        with open(SETTINGS_PATH, 'r') as f:
+        with open(ROOT_PATH / 'settings.txt', 'r') as f:
             settings = yaml.safe_load(f)
 
         if 'Base_RomFS_Path' in settings:
@@ -141,10 +154,10 @@ class RandomizerWindow(QMainWindow):
             self.ui.seed_line.setText(settings['Seed'])
         for check in self.findChildren(QCheckBox):
             check: QCheckBox
-            if check.text() in settings:
+            if check.text() in settings and check.isEnabled():
                 check.setChecked(settings[check.text()])
-        for box in self.findChildren(QComboBox):
-            box: QComboBox
+        for box in self.findChildren(RandomizerComboBox):
+            box: RandomizerComboBox
             setting_name = box.currentText().split(':')[0]
             if setting_name in settings:
                 index = box.findText(f"{setting_name}:  {settings[setting_name]}")
@@ -158,10 +171,33 @@ class RandomizerWindow(QMainWindow):
         return super().closeEvent(event)
 
 
+    def showAbout(self) -> None:
+        with open(RESOURCE_PATH / "about.txt", 'r') as f:
+            about = f.read()
+        HelpWindow(title="About", text=about)
+
+
+    def showChangelog(self) -> None:
+        with open(RESOURCE_PATH / "changelog.txt", 'r') as f:
+            changes = f.read()
+        HelpWindow(title="Changelog", text=changes, with_scroll=True)
+
+
+    def showReadme(self) -> None:
+        ext = "md" if RUNNING_FROM_SOURCE else "txt"
+        with open(ROOT_PATH / f"README.{ext}", 'r') as f:
+            readme = f.read()
+        HelpWindow(title="README", text=readme, with_scroll=True, markdown=True)
+
+
 
 class Ui_RandomizerWindow(object):
     def setupUi(self, window: QMainWindow) -> None:
-        window.setWindowTitle("Octo Expansion Randomizer v0.1.0")
+        window.setWindowTitle(f"Octo Expansion Randomizer v{VERSION}")
+        cursor_pixmap = QPixmap(RESOURCE_PATH / "cursor.png")
+        cursor_pixmap = cursor_pixmap.scaled(32, 32, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+        window.setCursor(cursor_pixmap)
+
         widget = QWidget()
         vl = QVBoxLayout()
 
@@ -219,7 +255,7 @@ class Ui_RandomizerWindow(object):
         group.setStyleSheet("QGroupBox {font-size: 12px; font-weight: bold;}")
         weapon_check = QCheckBox("Weapons", group)
         level_check = QCheckBox("Levels", group)
-        thang_box = QComboBox(group)
+        thang_box = RandomizerComboBox(group)
         thang_box.addItems((
             "Thangs:  Vanilla",
             "Thangs:  Restricted",
@@ -228,7 +264,15 @@ class Ui_RandomizerWindow(object):
         beatable_check = QCheckBox("First Weapon Vanilla", group)
         lava_check = QCheckBox("Enemy Ink Is Lava", group)
         cutscenes_check = QCheckBox("Skip Cutscenes", group)
+        cutscenes_check.setDisabled(True)
+        ft = cutscenes_check.font()
+        ft.setStrikeOut(True)
+        cutscenes_check.setFont(ft)
         background_check = QCheckBox("Backgrounds", group)
+        background_check.setDisabled(True)
+        ft = background_check.font()
+        ft.setStrikeOut(True)
+        background_check.setFont(ft)
         color_check = QCheckBox("Ink Color", group)
         music_check = QCheckBox("Music", group)
         hl = QHBoxLayout()
@@ -256,17 +300,19 @@ class Ui_RandomizerWindow(object):
         group.setLayout(ovl)
         vl.addWidget(group)
 
-        region_box = QComboBox(widget)
+        region_box = RandomizerComboBox(widget)
         region_box.addItems((
             "Region:  EU",
             "Region:  JP",
             "Region:  US"
         ))
-        platform_box = QComboBox(widget)
+        region_box.upwards = True
+        platform_box = RandomizerComboBox(widget)
         platform_box.addItems((
             "Platform:  Console",
             "Platform:  Emulator"
         ))
+        platform_box.upwards = True
         button = QPushButton("RANDOMIZE", widget)
         button.setFixedWidth(button.width() * 3 // 2) # floored multiplier of 1.5
         button.clicked.connect(window.randomize)
@@ -281,10 +327,23 @@ class Ui_RandomizerWindow(object):
         window.setCentralWidget(widget)
 
         # make settings all a consistent size
-        for box in window.findChildren(QComboBox):
+        for box in window.findChildren(RandomizerComboBox):
             box.setFixedWidth(150)
         for check in window.findChildren(QCheckBox):
             check.setFixedWidth(150)
+
+        # signals for settings compatibility (other settings will be disabled if another is not checked)
+        weapon_check.clicked.connect(lambda: window.toggleDisable(not weapon_check.isChecked(), beatable_check))
+        level_check.clicked.connect(lambda: window.toggleDisable(not level_check.isChecked(), thang_box))
+
+        # setup menu bar
+        help_menu = window.menuBar().addMenu("Help")
+        about_act = help_menu.addAction("About")
+        about_act.triggered.connect(window.showAbout)
+        change_act = help_menu.addAction("Changelog")
+        change_act.triggered.connect(window.showChangelog)
+        read_act = help_menu.addAction("README")
+        read_act.triggered.connect(window.showReadme)
 
 
     def createHorizontalSpacer(self) -> QSpacerItem:
@@ -299,6 +358,7 @@ class WorkWindow(QMainWindow):
         self.ui.setupUi(self)
         self.setWindowTitle(settings['Seed'])
         self.settings = settings
+        self.out_dir = settings['Output_Path']
         self.done = False
         self.error = False
         self.cancel = False
@@ -314,13 +374,13 @@ class WorkWindow(QMainWindow):
 
     def workError(self, er_message: str) -> None:
         self.error = True
-        with open(LOGS_PATH, 'w') as f:
+        with open(ROOT_PATH / 'log.txt', 'w') as f:
             f.write(f"{self.windowTitle()}")
             f.write(f'\n\n{er_message}')
             f.write(f'\n\n{self.settings}')
 
 
-    def workDone(self):
+    def workDone(self) -> None:
         if self.error:
             self.ui.label.setText("Something went wrong! Please report this to GitHub!")
             self.ui.progress.setVisible(False)
@@ -334,11 +394,12 @@ class WorkWindow(QMainWindow):
         
         self.ui.label.setText("All done! Check the README for instructions on how to play!")
         self.ui.progress.setVisible(False)
+        self.ui.button.setVisible(True)
         self.done = True
 
 
     # override the window close event to close the randomization thread
-    def closeEvent(self, event):
+    def closeEvent(self, event) -> None:
         if self.done:
             event.accept()
         else:
@@ -346,6 +407,17 @@ class WorkWindow(QMainWindow):
             self.cancel = True
             self.ui.label.setText('Canceling...')
             self.work_thread.stop()
+
+
+    def onButtonClicked(self) -> None:
+        out_path = Path(self.out_dir).absolute()
+        if platform.system() == "Windows":
+            os.startfile(out_path)
+        elif platform.system() == "Darwin":
+            subprocess.Popen(["open", out_path])
+        else:
+            subprocess.Popen(["xdg-open", out_path])
+        self.close()
 
 
 
@@ -358,7 +430,57 @@ class Ui_WorkWindow(object):
         vl = QVBoxLayout()
         vl.addWidget(self.label)
         vl.addWidget(self.progress)
+        self.button = QPushButton("Open Folder", window)
+        vl.addWidget(self.button)
+        self.button.setVisible(False)
+        self.button.clicked.connect(window.onButtonClicked)
         window.setMinimumSize(448, 112)
         widget = QWidget(window)
         widget.setLayout(vl)
         window.setCentralWidget(widget)
+
+
+
+class HelpWindow(QMessageBox):
+    def __init__(self, title: str, text: str, with_scroll: bool = False, markdown: bool = False) -> None:
+        super(HelpWindow, self).__init__()
+        self.setWindowTitle(f"Octo Expansion Randomizer - {title}")
+        self.content = QWidget()
+        vl = QVBoxLayout(self.content)
+        if with_scroll:
+            if markdown:
+                browser = QTextBrowser(self)
+                browser.setMarkdown(text)
+                vl.addWidget(browser)
+            else:
+                vl.addWidget(QLabel(text, self))
+            scroll = QScrollArea(self)
+            scroll.setWidgetResizable(True)
+            scroll.setWidget(self.content)
+            self.layout().addWidget(scroll, 0, 0, 1, 1)
+            self.setStyleSheet("QScrollArea{min-width:400 px; min-height: 300px}")
+        else:
+            self.setText(text)
+        self.exec()
+
+
+
+class RandomizerComboBox(QComboBox):
+    upwards: bool = False
+
+
+    def __init__(self, parent) -> None:
+        super(RandomizerComboBox, self).__init__()
+        self.setParent(parent)
+
+
+    def showPopup(self) -> None:
+        """Custom popup implementation to move it fully below or above the combobox"""
+
+        QComboBox.showPopup(self)
+        popup: QWidget = self.findChild(QFrame)
+        pos_x = popup.x()
+        pos_y = popup.y() + (self.height() * (self.currentIndex() + 1))
+        if self.upwards:
+            pos_y -= (self.height() + popup.height())
+        popup.move(pos_x, pos_y)

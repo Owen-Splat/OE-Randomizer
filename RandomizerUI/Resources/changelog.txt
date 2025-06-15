@@ -1,0 +1,26 @@
+<b>0.2.0:</b>
+<ul>
+<li>Option to keep first weapon vanilla</li>
+<li>Option to skip cutscenes (not yet implemented)</li>
+<li>Randomized backgrounds (not yet implemented)</li>
+<li>Added restrictions to Thangs to improve the player experience</li>
+<li>Improvements to special weapon randomization (not yet implemented)</li>
+<li>Removed "Enemy Ink Is Lava" on ranked modes to prevent softlocking (not yet implemented)</li>
+</ul>
+<br></br>
+
+<b>0.1.1:</b>
+<ul>
+<li>Removed requiring DLC RomFS</li>
+</ul>
+<br></br>
+
+<b>0.1.0:</b>
+<ul>
+<li>Randomized weapons</li>
+<li>Randomized levels</li>
+<li>Randomized thangs</li>
+<li>Randomized ink color</li>
+<li>Randomized music</li>
+<li>"Enemy Ink Is Lava" challenge mode</li>
+</ul>
