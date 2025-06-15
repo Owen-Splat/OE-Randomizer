@@ -96,6 +96,7 @@ class Metro_Process(QThread):
             sarc_data.writer.files[info_file] = map_data.repack()
 
         # make all lines unlocked to for testing
+        """
         info_file = 'Mush/Octa2DMapLineInfo.byml'
         container = nisasyst.NisasystContainer(info_file, bytes(sarc_data.writer.files[info_file]))
         map_data = zs_tools.BYAML(data=container.data, compressed=False)
@@ -103,7 +104,7 @@ class Metro_Process(QThread):
             line['OpenConditionStageList'] = '84'
         container.data = bytes(map_data.repack())
         sarc_data.writer.files[info_file] = container.repack()
-
+        """
         self.writeFile('Pack', 'Mush.release.pack', sarc_data.repack())
         self.editMapObjs()
 
@@ -219,15 +220,17 @@ class Metro_Process(QThread):
                 stages : dict = yaml.safe_load(f)
             aquaBall_stages = {}
             for i, (k,v) in enumerate(stages.items()):
-                for i2, id in enumerate(v):
-                    aquaBall_stages[id] = True
+                for i2, v2 in enumerate(v):
+                    for i3, (id, dif) in enumerate(v2.items()):
+                        aquaBall_stages[id] = dif
 
             with open(DATA_PATH / 'JetpackStageList.yml', 'r') as f:
                 stages : dict = yaml.safe_load(f)
             jetpack_stages = {}
             for i, (k,v) in enumerate(stages.items()):
-                for i2, id in enumerate(v):
-                    jetpack_stages[id] = True
+                for i2, v2 in enumerate(v):
+                    for i3, (id, dif) in enumerate(v2.items()):
+                        jetpack_stages[id] = dif
             
 
         self.maps_to_add_special = {}
@@ -244,8 +247,10 @@ class Metro_Process(QThread):
 
             if self.settings['Levels']:
                 new_map = self.map_names[self.stages[map['UIID'].v]]
+                stage_index = self.stages[map['UIID'].v]
             else:
                 new_map = map['MapName']
+                stage_index = map['UIID'].v
             map['MapName'] = new_map
 
             # save myself credits when testing lol
@@ -263,28 +268,32 @@ class Metro_Process(QThread):
                 continue
 
             # # 5% chance for a special per stage, AquaBall has priority over Jetpack
-            aquaBall_difficulty = aquaBall_stages.get(self.stages[map['UIID'].v], False)
-            if (aquaBall_difficulty and random.randint(0, 19) == random.choice(list(range(20)))):
+            # # difficulty threshold will be a future setting
+            aquaBall_difficulty = aquaBall_stages.get(stage_index, 10)
+            if (aquaBall_difficulty <= 5 and random.randint(0, 9) == random.choice(list(range(10)))):
                  map['MainA'] = 'AquaBall'
                  map['SubA'] = '-'
                  map['MainB'] = '-'
                  map['SubB'] = '-'
                  map['MainC'] = '-'
                  map['SubB'] = '-'
-                 self.maps_to_add_special[new_map] = map['MainA']
+                 self.maps_to_add_special[new_map] = 'AquaBall'
+                 map['RewardA'] = oead.S32((aquaBall_difficulty - 1) * 750 + 500)
                  continue
             
-            jetPack_difficulty = jetpack_stages.get(self.stages[map['UIID'].v], False)
-            if (jetPack_difficulty and random.randint(0, 19) == random.choice(list(range(20)))):
+            jetPack_difficulty = jetpack_stages.get(stage_index, 10)
+            if (jetPack_difficulty <= 5 and random.randint(0, 9) == random.choice(list(range(10)))):
                  map['MainA'] = 'Jetpack'
                  map['SubA'] = '-'
                  map['MainB'] = '-'
                  map['SubB'] = '-'
                  map['MainC'] = '-'
                  map['SubB'] = '-'
-                 self.maps_to_add_special[new_map] = map['MainA']
+                 self.maps_to_add_special[new_map] = 'Jetpack'
+                 map['RewardA'] = oead.S32((jetPack_difficulty - 1) * 750 + 500)
                  continue
 
+            self.maps_to_add_special[new_map] = 'None'
             # if not a special level, make the first weapon vanilla and randomize the next 2
             no_dups = list(weapons['Main_Weapons']).copy()
 
@@ -405,7 +414,7 @@ class Metro_Process(QThread):
         obj['Scale'] = {'X': oead.F32(1.0), 'Y': oead.F32(1.0), 'Z': oead.F32(1.0)}
         obj['Team'] = oead.S32(2)
         obj['Translate'] = {'X': oead.F32(0.0), 'Y': oead.F32(0.0), 'Z': oead.F32(0.0)}
-        obj['Type'] = oead.S32(0 if special=='Jetpack' else 1)
+        obj['Type'] = oead.S32(0 if special=='Jetpack' else 1 if special=='AquaBall' else 2)
         obj['UnitConfigName'] = 'AlwaysSpecialSetterOcta'
         return obj
 
