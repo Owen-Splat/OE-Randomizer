@@ -95,7 +95,7 @@ class Metro_Process(QThread):
             self.randomizeAesthetics(map_data)
             sarc_data.writer.files[info_file] = map_data.repack()
 
-        # make all lines unlocked to for testing
+        # make all lines unlocked for thang testing, can maybe be a setting good for races
         info_file = 'Mush/Octa2DMapLineInfo.byml'
         container = nisasyst.NisasystContainer(info_file, bytes(sarc_data.writer.files[info_file]))
         map_data = zs_tools.BYAML(data=container.data, compressed=False)
@@ -263,7 +263,8 @@ class Metro_Process(QThread):
             if self.settings['First Weapon Vanilla']:
                 map['MainA'] = first_weapons[new_map]['Main']
                 map['SubA'] = first_weapons[new_map]['Sub']
-                no_dups.pop(map['MainA'])
+                if map['MainA'] not in ('NoWeapon', '-'):
+                    no_dups.pop(no_dups.index(map['MainA']))
             else:
                 map['MainA'] = no_dups.pop(no_dups.index(random.choice(no_dups)))
                 map['SubA'] = random.choice(weapons['Sub_Weapons'])
