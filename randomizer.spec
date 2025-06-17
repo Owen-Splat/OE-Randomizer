@@ -8,6 +8,8 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
+        ('RandomizerCore/Data/AquaBallStageList.yml', 'RandomizerCore/Data'),
+        ('RandomizerCore/Data/JetpackStageList.yml', 'RandomizerCore/Data'),
         ('RandomizerCore/Data/StageList.yml', 'RandomizerCore/Data'),
         ('RandomizerCore/Data/Weapons.yml', 'RandomizerCore/Data'),
         ('version.txt', '.')
