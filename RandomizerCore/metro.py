@@ -255,12 +255,12 @@ class Metro_Process(QThread):
                 continue
 
             # ~19% chance for a special per valid stage, AquaBall has priority over Jetpack (since Jetpack cheeses everything)
-            # difficulty threshold will be a future setting
+            # difficulty threshold will be a future setting (set highest to 3 for now so casuals do not struggle)
             # right now, adding a special means it will activate regardless of weapon choice
             # to force vanilla weapon to work, we can't add a special to either of the other 2 slots
             if not self.settings['First Weapon Vanilla']:
                 aquaBall_difficulty = aquaBall_stages.get(stage_index, 10)
-                if (aquaBall_difficulty <= 5 and random.randint(0, 9) == random.choice(list(range(10)))):
+                if (aquaBall_difficulty <= 3 and random.randint(0, 9) == random.choice(list(range(10)))):
                     map['MainA'] = 'AquaBall'
                     map['SubA'] = '-'
                     map['MainB'] = '-'
@@ -272,7 +272,7 @@ class Metro_Process(QThread):
                     continue
 
                 jetPack_difficulty = jetpack_stages.get(stage_index, 10)
-                if (jetPack_difficulty <= 5 and random.randint(0, 9) == random.choice(list(range(10)))):
+                if (jetPack_difficulty <= 3 and random.randint(0, 9) == random.choice(list(range(10)))):
                     map['MainA'] = 'Jetpack'
                     map['SubA'] = '-'
                     map['MainB'] = '-'
@@ -365,7 +365,8 @@ class Metro_Process(QThread):
                 print('Map object not found:', map)
                 continue
 
-            if self.settings['Enemy Ink Is Lava']:
+            # only apply Enemy Ink Is Lava if it's not a Rainmaker or Tower level
+            if self.settings['Enemy Ink Is Lava'] and any(s in map for s in ("Hoko", "Yagura")):
                 map_data.info['Objs'].append(self.makeSuddenDeathObj())
             if map in self.maps_to_add_special:
                 map_data.info['Objs'].append(self.makeSpecialSetterObj(self.maps_to_add_special[map]))

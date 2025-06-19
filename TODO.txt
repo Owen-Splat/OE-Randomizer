@@ -2,6 +2,6 @@
 - randomize music (incompatible music results in no music playing, needs more testing)
 - memcakes
 - add proper logic, difficulty settings as well
-- failing damageless in tower/rainmaker levels results in a softlock
+- failing damageless in tower/rainmaker levels results in a softlock (should be fixed but need tested)
 - skippable cutscenes
-- cannot only randomize levels (main branch issue, double check dev branch)
+- need to remove specials on vanilla special level next version when the rando shuffles it into something else
