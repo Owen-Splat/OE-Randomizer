@@ -347,7 +347,7 @@ class Metro_Process(QThread):
         with open(self.base_path / 'Pack' / 'Map.pack', 'rb') as f:
             sarc_data = zs_tools.SARC(data=f.read(), compressed=False)
 
-        for k,map in self.map_names.items():
+        for map in self.map_names:
             if not self.thread_active:
                 break
 
