@@ -194,9 +194,11 @@ class RandomizerWindow(QMainWindow):
 class Ui_RandomizerWindow(object):
     def setupUi(self, window: QMainWindow) -> None:
         window.setWindowTitle(f"Octo Expansion Randomizer v{VERSION}")
-        cursor_pixmap = QPixmap(RESOURCE_PATH / "cursor.png")
-        cursor_pixmap = cursor_pixmap.scaled(32, 32, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
-        window.setCursor(cursor_pixmap)
+
+        # # custom cursor - certain widgets override it so just leave off for now
+        # cursor_pixmap = QPixmap(RESOURCE_PATH / "cursor.png")
+        # cursor_pixmap = cursor_pixmap.scaled(32, 32, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+        # window.setCursor(cursor_pixmap)
 
         widget = QWidget()
         vl = QVBoxLayout()
