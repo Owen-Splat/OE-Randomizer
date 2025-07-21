@@ -366,7 +366,7 @@ class Metro_Process(QThread):
                 continue
 
             # only apply Enemy Ink Is Lava if it's not a Rainmaker or Tower level
-            if self.settings['Enemy Ink Is Lava'] and any(s in map for s in ("Hoko", "Yagura")):
+            if self.settings['Enemy Ink Is Lava'] and not any(s in map for s in ("Hoko", "Yagura")):
                 map_data.info['Objs'].append(self.makeSuddenDeathObj())
             if map in self.maps_to_add_special:
                 map_data.info['Objs'].append(self.makeSpecialSetterObj(self.maps_to_add_special[map]))
