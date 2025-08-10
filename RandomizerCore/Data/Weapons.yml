@@ -74,7 +74,7 @@ Main_Weapons:
   - Shooter_Short_01
   - Shooter_Gravity_00
   - Charger_NormalScope_00
-  - Umbrella_CoopAutoAssault
+  # - Umbrella_CoopAutoAssault
   - Charger_Keeper_00
   # - Spinner_MissionStandardLv0
   # - Roller_MissionNormalLv0
