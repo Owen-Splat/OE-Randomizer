@@ -145,7 +145,7 @@ class Metro_Process(QThread):
             for i2, id in enumerate(v):
                 if not self.thread_active:
                     break
-                self.stages[id] = lines[i][i2]
+                self.stages[lines[i][i2]] = id
 
 
     def moveLevels(self, stages: dict) -> list | None:
@@ -190,8 +190,8 @@ class Metro_Process(QThread):
                         break
                     new_id = random.choice(ids)
                 # prevent this line from having more than one thang if settings['Thangs'] == 'Restricted'
-                while new_id in [80, 81, 82, 83] and len([l for l in line if l in [80, 81, 82, 83]]) > 0 and self.settings['Thangs'] == 'Restricted':
-                    if len([l for l in ids if l not in [80, 81, 82, 83]]) == 0: # break if there are no valid levels left
+                while new_id in [80, 81, 82, 83] and (len([l for l in line if l in [80, 81, 82, 83]]) > 0 or stages[list(stages.keys())[i]][i2] in thang_restricted_levels) and self.settings['Thangs'] == 'Restricted':
+                    if len([l for l in ids if l not in [80, 81, 82, 83]]) == 0 and not stages[list(stages.keys())[i]][i2] in thang_restricted_levels: # break if there are no valid levels left
                         valid_levels = False
                         break
                     new_id = random.choice(ids)
@@ -222,7 +222,7 @@ class Metro_Process(QThread):
                 for i, (k,v) in enumerate(stages.items()):
                     for i2, v2 in enumerate(v):
                         for i3, (id, dif) in enumerate(v2.items()):
-                            aquaBall_stages[id] = dif
+                            aquaBall_stages[self.stages[id]] = dif
 
                 with open(DATA_PATH / 'JetpackStageList.yml', 'r') as f:
                     stages : dict = yaml.safe_load(f)
@@ -230,7 +230,7 @@ class Metro_Process(QThread):
                 for i, (k,v) in enumerate(stages.items()):
                     for i2, v2 in enumerate(v):
                         for i3, (id, dif) in enumerate(v2.items()):
-                            jetpack_stages[id] = dif
+                            jetpack_stages[self.stages[id]] = dif
 
         for map in map_data.info:
             if not self.thread_active:
