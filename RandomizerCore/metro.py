@@ -80,6 +80,8 @@ class Metro_Process(QThread):
 
         self.defineLevels(map_data)
 
+        self.maps_to_add_special = {}
+
         # edit data
         if self.settings['Weapons'] or self.settings['Levels'] or self.settings['Thangs']:
             self.editLevels(map_data)
@@ -179,8 +181,6 @@ class Metro_Process(QThread):
                 if map['MapName'] in list(self.map_names.values()):
                     first_weapons[map['MapName']] = {'Main': map['MainA'], 'Sub': map['SubA']}
 
-        self.maps_to_add_special = {}
-
         for map in map_data.info:
             if map['UIID'].v > 83:
                 continue
@@ -242,7 +242,7 @@ class Metro_Process(QThread):
                 musics.add(map['BGMType'])
             if 'FixTeamColor' in map:
                 colors.add(map['FixTeamColor'])
-        
+
         musics = list(musics)
         random.shuffle(musics)
         colors = list(colors)
@@ -317,7 +317,7 @@ class Metro_Process(QThread):
 
     def writeFile(self, path: str, name: str, data: bytes):
         """ Creates parent folders and writes the file
-        
+
         Parameters
         ----------
         path : str
